@@ -51,6 +51,7 @@ module.exports.models = {
    ***************************************************************************/
 
   migrate: "alter",
+  // migrate: "drop",
 
   /***************************************************************************
    *                                                                          *
@@ -68,6 +69,7 @@ module.exports.models = {
     createdAt: { type: "number", autoCreatedAt: true },
     updatedAt: { type: "number", autoUpdatedAt: true },
     id: { type: "string", columnName: "_id" }
+    // id: { type: 'number', autoIncrement: true },
 
     //--------------------------------------------------------------------------
     //  /\   Using MongoDB?
