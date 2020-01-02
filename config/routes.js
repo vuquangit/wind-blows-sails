@@ -32,6 +32,7 @@ module.exports.routes = {
    ***************************************************************************/
   "GET /test": "testApi/test",
 
-  "GET /api/v1/oauth/me/": "AuthController.currentUser",
-  "POST /api/v1/signup": "AuthController.signup"
+  "GET /api/v1/auth/me/": "AuthController.currentUser",
+  "POST /api/v1/signup": "AuthController.signup",
+  "POST /api/v1/login": "AuthController.login"
 };

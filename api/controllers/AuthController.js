@@ -5,21 +5,22 @@
  * @help        :: See http://links.sailsjs.org/docs/controllers
  */
 
-// var Promise = require("bluebird");
-var ObjectID = require("mongodb").ObjectID;
-
 module.exports = {
   login: function(req, res) {
     var email = req.body.email;
     var password = req.body.password;
 
     if (!email || !password) {
-      return res.status(401).send({ message: "Email and password required" });
+      return res.status(401).send({
+        message: "Email and password required"
+      });
     }
 
     User.findOneByEmail(email, (err, user) => {
       if (!user) {
-        return res.json(401, { message: "Invalid username or password" });
+        return res.json(401, {
+          message: "Invalid username or password"
+        });
       }
 
       User.validatePassword(password, user, (err, valid) => {
@@ -27,12 +28,18 @@ module.exports = {
           return res.status(403);
         }
         if (!valid) {
-          return res.status(401).send({ message: "Invalid Credentials" });
+          return res.status(401).send({
+            message: "Invalid Credentials"
+          });
         }
       });
 
-      var jwtToken = createAuthToken(user);
-      res.status(200).json({ user: user, token: jwtToken });
+      // var jwtToken = createAuthToken(user);
+      // res.status(200).json({ user: user, token: jwtToken });
+
+      res.status(200).json({
+        user: user
+      });
     });
   },
   signup: async function(req, res) {
@@ -48,7 +55,9 @@ module.exports = {
     // return userParams;
 
     if (!userParams.email || !userParams.password) {
-      return res.status(401).send({ message: "Email and password required" });
+      return res.status(401).send({
+        message: "Email and password required"
+      });
     }
 
     var newUser = await User.create(userParams)
@@ -57,9 +66,14 @@ module.exports = {
         return "emailAlreadyInUse";
       })
       // Some other kind of usage / validation error
-      .intercept({ name: "UsageError" }, err => {
-        return "invalid: " + err;
-      })
+      .intercept(
+        {
+          name: "UsageError"
+        },
+        err => {
+          return "invalid: " + err;
+        }
+      )
       .fetch();
     // If something completely unexpected happened, the error will be thrown as-is.
 
@@ -67,13 +81,26 @@ module.exports = {
   },
 
   currentUser: async function(req, res) {
-    var id = req.params;
+    var values = req.allParams();
 
-    console.log(id);
+    console.log(values);
 
-    return res.json(id);
+    if (!values.email) {
+      return res.status(401).send({
+        message: "Email required"
+      });
+    }
 
-    // User.findOne(req.user._id)
+    var data = await User.find({
+      where: {
+        email: values.email
+      },
+      select: ["bio", "fullName", "username"]
+    });
+
+    return res.send(data);
+
+    // User.findOne(values.email)
     // .populate("roles")
     // .exec((err, foundUser) => {
     //   if (err) {

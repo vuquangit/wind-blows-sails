@@ -33,7 +33,8 @@ module.exports.models = {
    *                                                                          *
    ***************************************************************************/
 
-  // schema: true,
+  // This setting is only relevant for models using schemaless databases like MongoDB.
+  schema: true,
 
   /***************************************************************************
    *                                                                          *
@@ -50,8 +51,8 @@ module.exports.models = {
    *                                                                          *
    ***************************************************************************/
 
-  migrate: "alter",
-  // migrate: "drop",
+  //migrate: "alter",
+  migrate: "safe",
 
   /***************************************************************************
    *                                                                          *
