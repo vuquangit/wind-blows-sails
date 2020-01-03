@@ -79,7 +79,6 @@ module.exports = {
 
     return res.status(201).send(newUser);
   },
-
   currentUser: async function(req, res) {
     var values = req.allParams();
 
@@ -98,22 +97,10 @@ module.exports = {
       select: ["bio", "fullName", "username"]
     });
 
+    // console.log(data.length);
+    // if (data.length) {
+    // }
+
     return res.send(data);
-
-    // User.findOne(values.email)
-    // .populate("roles")
-    // .exec((err, foundUser) => {
-    //   if (err) {
-    //     return console.log(err);
-    //   }
-
-    //   //console.log( _.pluck(foundUser.roles, 'id'));
-    //   var user = {
-    //     email: foundUser.email,
-    //     fullName: foundUser.fullName
-    //   };
-
-    //   res.status(200).json(user);
-    // });
   }
 };

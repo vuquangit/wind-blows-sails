@@ -79,7 +79,6 @@ module.exports = {
     //   delete obj.password;
     //   delete obj.updatedAt;
     //   delete obj.createdAt;
-
     //   return obj;
     // }
   },
