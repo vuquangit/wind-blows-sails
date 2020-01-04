@@ -72,8 +72,21 @@ module.exports = {
       type: "number",
       autoUpdatedAt: true
     },
-    follower: { type: "string", defaultsTo: "{}" },
-    following: { type: "string", defaultsTo: "{}" }
+    follower: {
+      type: "json",
+      columnType: "array",
+      defaultsTo: ""
+    },
+    following: {
+      type: "json",
+      columnType: "array",
+      defaultsTo: ""
+    },
+    blocked: {
+      type: "json",
+      columnType: "array"
+    }
+
     // ,toJSON: function() {
     //   var obj = this.toObject();
     //   delete obj.password;

@@ -48,7 +48,9 @@ module.exports = {
       username: req.body.username,
       fullName: req.body.fullName,
       password: req.body.password,
-      isNew: true
+      profilePictureUrl: req.body.profilePictureUrl || "",
+      isNew: true,
+      isVerified: false
     };
 
     console.log(userParams);
@@ -94,7 +96,15 @@ module.exports = {
       where: {
         email: values.email
       },
-      select: ["bio", "fullName", "username"]
+      select: [
+        "bio",
+        "fullName",
+        "username",
+        "isNew",
+        "isPrivate",
+        "profilePictureUrl",
+        "isVerified"
+      ]
     });
 
     // console.log(data.length);
