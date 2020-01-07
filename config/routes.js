@@ -30,7 +30,12 @@ module.exports.routes = {
    * not match any of those, it is matched against static assets.             *
    *                                                                          *
    ***************************************************************************/
-  "GET /api/v1/auth/me/": "AuthController.currentUser",
+  // Auth controller
+  "PUT /api/v1/auth/me/": "AuthController.currentUser",
   "POST /api/v1/signup": "AuthController.signup",
-  "POST /api/v1/login": "AuthController.login"
+  "POST /api/v1/login": "AuthController.login",
+
+  // User controller
+  "PUT /api/v1/add-following": "UserController.addFollowing",
+  "POST /api/v1/following": "UserController.following"
 };

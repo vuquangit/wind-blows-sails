@@ -47,12 +47,13 @@ module.exports = {
 
     username: {
       type: "string",
-      required: true,
+      // required: true,
       unique: true
     },
 
     password: {
       type: "string"
+      // required: true,
     },
 
     website: {
@@ -84,7 +85,8 @@ module.exports = {
     },
     blocked: {
       type: "json",
-      columnType: "array"
+      columnType: "array",
+      defaultsTo: ""
     }
 
     // ,toJSON: function() {

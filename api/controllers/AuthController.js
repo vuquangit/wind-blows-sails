@@ -6,7 +6,7 @@
  */
 
 module.exports = {
-  login: function(req, res) {
+  login: async (req, res) => {
     var email = req.body.email;
     var password = req.body.password;
 
@@ -42,51 +42,27 @@ module.exports = {
       });
     });
   },
-  signup: async function(req, res) {
-    var userParams = {
+  signup: async (req, res) => {
+    const userParams = {
       email: req.body.email,
-      username: req.body.username,
-      fullName: req.body.fullName,
-      password: req.body.password,
-      profilePictureUrl: req.body.profilePictureUrl || "",
+      username: req.body.username || "",
+      fullName: req.body.fullName || "",
+      password: req.body.password || null,
       isNew: true,
       isVerified: false
     };
 
-    console.log(userParams);
-    // return userParams;
-
-    if (!userParams.email || !userParams.password) {
-      return res.status(401).send({
-        message: "Email and password required"
-      });
-    }
-
-    var newUser = await User.create(userParams)
-      // Uniqueness constraint violation
-      .intercept("E_UNIQUE", err => {
-        return "emailAlreadyInUse";
-      })
-      // Some other kind of usage / validation error
-      .intercept(
-        {
-          name: "UsageError"
-        },
-        err => {
-          return "invalid: " + err;
-        }
-      )
-      .fetch();
-    // If something completely unexpected happened, the error will be thrown as-is.
+    newUser = AuthService.createUser(userParams, true);
 
     return res.status(201).send(newUser);
   },
   currentUser: async function(req, res) {
-    var values = req.allParams();
+    // var values = req.allParams();
+    const email = req.body.email;
 
-    console.log(values);
+    // console.log(values);
 
-    if (!values.email) {
+    if (!email) {
       return res.status(401).send({
         message: "Email required"
       });
@@ -94,7 +70,7 @@ module.exports = {
 
     var data = await User.find({
       where: {
-        email: values.email
+        email: email
       },
       select: [
         "bio",
@@ -105,12 +81,20 @@ module.exports = {
         "profilePictureUrl",
         "isVerified"
       ]
-    });
+    }).catch(err => res.serverError(err));
 
-    // console.log(data.length);
-    // if (data.length) {
-    // }
+    console.log("lenght: ", data.length);
+    if (!data.length) {
+      const userParams = {
+        email: req.body.email,
+        fullName: req.body.fullName || "",
+        isNew: true,
+        isVerified: false
+      };
 
-    return res.send(data);
+      newUser = AuthService.createUser(userParams, false);
+
+      return res.send(newUser);
+    } else return res.send(data);
   }
 };
