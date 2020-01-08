@@ -36,6 +36,8 @@ module.exports.routes = {
   "POST /api/v1/login": "AuthController.login",
 
   // User controller
-  "PUT /api/v1/add-following": "UserController.addFollowing",
-  "POST /api/v1/following": "UserController.following"
+  "POST /api/v1/add-following": "UserController.addFollow",
+  "POST /api/v1/unfollow": "UserController.unfollow",
+  "POST /api/v1/following": "UserController.following",
+  "POST /api/v1/follower": "UserController.follower"
 };

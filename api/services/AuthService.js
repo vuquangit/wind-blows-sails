@@ -1,6 +1,6 @@
 module.exports = {
   createUser: async (userParams, isRequestPassword) => {
-    console.log(userParams);
+    // console.log(userParams);
 
     if (isRequestPassword) {
       if (!userParams.email || !userParams.password) {
