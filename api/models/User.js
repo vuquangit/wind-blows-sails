@@ -87,13 +87,19 @@ module.exports = {
       type: "json",
       columnType: "array",
       defaultsTo: ""
+    },
+    isUnpublished: { type: "string" },
+    // Add a reference to Post
+    postId: {
+      collection: "posts",
+      via: "ownerId"
     }
 
-    // ,toJSON: function() {
+    // customToJSON: function() {
     //   var obj = this.toObject();
     //   delete obj.password;
-    //   delete obj.updatedAt;
-    //   delete obj.createdAt;
+    //   // delete obj.updatedAt;
+    //   // delete obj.createdAt;
     //   return obj;
     // }
   },

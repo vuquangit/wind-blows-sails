@@ -39,5 +39,14 @@ module.exports.routes = {
   "POST /api/v1/add-following": "UserController.addFollow",
   "POST /api/v1/unfollow": "UserController.unfollow",
   "POST /api/v1/following": "UserController.following",
-  "POST /api/v1/follower": "UserController.follower"
+  "POST /api/v1/follower": "UserController.follower",
+  "POST /api/v1/posts": "UserController.posts",
+
+  // Post controller
+  "POST /api/v1/add-post": "PostController.addPost",
+  "POST /api/v1/post": "PostController.post",
+  "POST /api/v1/like-post": "PostController.likePost",
+  "POST /api/v1/add-comments": "PostController.addComments",
+  "POST /api/v1/comments": "PostController.comments",
+  "POST /api/v1/like-comments": "PostController.likeComments"
 };
