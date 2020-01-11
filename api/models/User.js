@@ -65,49 +65,52 @@ module.exports = {
       type: "boolean",
       defaultsTo: false
     },
-    createdAt: {
-      type: "number",
-      autoCreatedAt: true
-    },
-    updatedAt: {
-      type: "number",
-      autoUpdatedAt: true
-    },
-    follower: {
-      type: "json",
-      columnType: "array",
-      defaultsTo: ""
-    },
-    following: {
-      type: "json",
-      columnType: "array",
-      defaultsTo: ""
-    },
-    blocked: {
-      type: "json",
-      columnType: "array",
-      defaultsTo: ""
-    },
     isUnpublished: { type: "string" },
-    // Add a reference to Post
+
+    // Add a reference to Follower model
+    following: {
+      collection: "user",
+      via: "follower",
+      dominant: true
+    },
+
+    // Add a reference to Following model
+    follower: {
+      collection: "user",
+      via: "following"
+    },
+
+    // Add a reference to Blocked model
+    blockedId: {
+      collection: "blocked",
+      via: "ownerId"
+    },
+
+    // Add a reference to Post model
     postId: {
       collection: "posts",
       via: "ownerId"
-    }
+    },
 
-    // customToJSON: function() {
-    //   var obj = this.toObject();
-    //   delete obj.password;
-    //   // delete obj.updatedAt;
-    //   // delete obj.createdAt;
-    //   return obj;
-    // }
+    // Add a reference to Saved model
+    savedId: {
+      collection: "savepost",
+      via: "ownerId"
+    }
+  },
+  customToJSON: function() {
+    // Return a shallow copy of this record with the password removed.
+    return _.omit(this, ["password"]);
   },
   beforeCreate: function(attributes, next) {
-    bcrypt.genSalt(10, function(err, salt) {
-      if (err) return next(err);
-      bcrypt.hash(attributes.password, salt, function(err, hash) {
-        if (err) return next(err);
+    bcrypt.genSalt(10, (err, salt) => {
+      if (err) {
+        return next(err);
+      }
+      bcrypt.hash(attributes.password, salt, (err, hash) => {
+        if (err) {
+          return next(err);
+        }
         attributes.password = hash;
         next();
       });
@@ -115,19 +118,19 @@ module.exports = {
   },
   validatePassword: function(password, user, cb) {
     bcrypt.compare(password, user.password, function(err, match) {
-      if (err) cb(err);
+      if (err) cb(err, false);
 
       if (match) {
         cb(null, true);
       } else {
-        cb(err);
+        cb(err, false);
       }
     });
   },
   getRoles: function(userId) {
     User.findOne(userId)
       .populate("roles")
-      .then(function(user) {
+      .then(user => {
         console.log(user.roles);
         return user.roles;
       });

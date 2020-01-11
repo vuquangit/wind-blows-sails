@@ -6,9 +6,6 @@ module.exports = {
     isSidecar: { type: "boolean" },
     isVideo: { type: "boolean" },
     location: { type: "string", defaultsTo: "" },
-    // numComments: { type: "number" },
-    // numPreviewLikes: { type: "number" },
-    // savedByViewer: { type: "boolean" },
     sidecarChildren: { type: "string" },
     src: { type: "string" },
     captionIsEdited: { type: "boolean" },
@@ -25,6 +22,9 @@ module.exports = {
     likeId: {
       collection: "postlikes",
       via: "postId"
+    },
+    savedId: {
+      model: "savepost"
     }
   }
 };

@@ -26,12 +26,12 @@ module.exports.security = {
    * https://sailsjs.com/docs/concepts/security/cors                          *
    *                                                                          *
    ***************************************************************************/
-
+  // To allow cross-origin requests from any domain to any route in your app, use allowOrigins: '*':
   // cors: {
-  //   allRoutes: false,
-  //   allowOrigins: '*',
-  //   allowCredentials: false,
-  // },
+  //   allRoutes: true,
+  //   allowOrigins: "*",
+  //   allowCredentials: false
+  // }
 
   cors: {
     allRoutes: true,
@@ -55,6 +55,5 @@ module.exports.security = {
    * https://sailsjs.com/docs/concepts/security/csrf                           *
    *                                                                           *
    ****************************************************************************/
-
   // csrf: false
 };

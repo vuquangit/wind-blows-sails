@@ -30,23 +30,33 @@ module.exports.routes = {
    * not match any of those, it is matched against static assets.             *
    *                                                                          *
    ***************************************************************************/
-  // Auth controller
-  "PUT /api/v1/auth/me/": "AuthController.currentUser",
+  // Auth controllers
+  "POST /api/v1/auth/me/": "AuthController.currentUser",
   "POST /api/v1/signup": "AuthController.signup",
   "POST /api/v1/login": "AuthController.login",
 
-  // User controller
-  "POST /api/v1/add-following": "UserController.addFollow",
-  "POST /api/v1/unfollow": "UserController.unfollow",
-  "POST /api/v1/following": "UserController.following",
-  "POST /api/v1/follower": "UserController.follower",
+  // User controllers
   "POST /api/v1/posts": "UserController.posts",
 
-  // Post controller
+  // Follow controllers
+  "POST /api/v1/add-following": "FollowController.addFollow",
+  "POST /api/v1/unfollow": "FollowController.unfollow",
+  "POST /api/v1/following": "FollowController.following",
+  "POST /api/v1/follower": "FollowController.follower",
+
+  // Blocked controllers
+  "POST /api/v1/add-user-blocked": "BlockedController.addUserBlocked",
+  "POST /api/v1/unblock": "BlockedController.unblock",
+  "POST /api/v1/blocked": "BlockedController.blocked",
+
+  // Post controllers
   "POST /api/v1/add-post": "PostController.addPost",
   "POST /api/v1/post": "PostController.post",
   "POST /api/v1/like-post": "PostController.likePost",
   "POST /api/v1/add-comments": "PostController.addComments",
   "POST /api/v1/comments": "PostController.comments",
-  "POST /api/v1/like-comments": "PostController.likeComments"
+  "POST /api/v1/like-comments": "PostController.likeComments",
+
+  // Save post controllers
+  "POST /api/v1/saved-post": "SavePostController.saved"
 };

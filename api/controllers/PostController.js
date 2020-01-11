@@ -9,13 +9,15 @@ module.exports = {
       ownerId: req.body.ownerId || undefined
     };
 
-    if (!postParams.ownerId)
+    if (!postParams.ownerId) {
       return res.status(401).json({ message: "Add failed. Owner ID request." });
+    }
 
-    if (!postParams.src)
+    if (!postParams.src) {
       return res
         .status(401)
         .json({ message: "Add failed. Image source request" });
+    }
 
     const userValid = await User.findOne({
       id: postParams.ownerId
@@ -23,9 +25,9 @@ module.exports = {
       res.serverError(err);
     });
 
-    if (userValid === undefined)
+    if (userValid === undefined) {
       return res.status(401).json({ message: "Add failed. User not found." });
-    else {
+    } else {
       const posted = await Posts.create(postParams)
         .fetch()
         .catch(err => {
@@ -37,10 +39,11 @@ module.exports = {
   post: async (req, res) => {
     const postId = req.body.postId || undefined;
 
-    if (!postId)
+    if (!postId) {
       return res
         .status(401)
         .json({ message: "Comments failed. User id request." });
+    }
 
     await Posts.findOne({
       where: { id: postId },
@@ -63,26 +66,30 @@ module.exports = {
           return res.serverError(err);
         }
 
-        if (!result)
+        if (!result) {
           return res.status(404).send({
             message: "Post ID not found"
           });
-        else return res.status(200).json(result);
+        } else {
+          return res.status(200).json(result);
+        }
       });
   },
   likePost: async (req, res) => {
     const userId = req.body.ownerId || undefined;
     const postId = req.body.postId || undefined;
 
-    if (!userId)
+    if (!userId) {
       return res
         .status(401)
         .json({ message: "Like post failed. User id request." });
+    }
 
-    if (!postId)
+    if (!postId) {
       return res
         .status(401)
         .json({ message: "Like post failed. Post id request." });
+    }
 
     const userValid = await User.findOne({
       id: userId
@@ -90,20 +97,20 @@ module.exports = {
       res.serverError(err);
     });
 
-    if (userValid === undefined)
+    if (userValid === undefined) {
       return res
         .status(401)
         .json({ message: "Like post failed. User ID is not valid." });
-    else {
+    } else {
       const postValid = await Posts.findOne({
         id: postId
       });
 
-      if (postValid === undefined)
+      if (postValid === undefined) {
         return res
           .status(401)
           .json({ message: "Like post failed. Post ID is not valid." });
-      else {
+      } else {
         const userLiked = await PostLikes.findOne({
           userId: userId,
           postId: postId
@@ -111,11 +118,11 @@ module.exports = {
           res.serverError(err);
         });
 
-        if (userLiked !== undefined)
+        if (userLiked !== undefined) {
           return res
             .status(401)
             .send({ message: "user ID has liked this post ID" });
-        else {
+        } else {
           await PostLikes.create({
             userId: userId,
             postId: postId
@@ -138,15 +145,17 @@ module.exports = {
       postId: req.body.postId || undefined
     };
 
-    if (!cmtParams.userId)
+    if (!cmtParams.userId) {
       return res
         .status(401)
         .json({ message: "Add comments failed. User ID request." });
+    }
 
-    if (!cmtParams.postId)
+    if (!cmtParams.postId) {
       return res
         .status(401)
         .json({ message: "Add comments failed. Post ID request." });
+    }
 
     const userValid = await User.findOne({
       id: cmtParams.userId
@@ -154,22 +163,22 @@ module.exports = {
       return res.serverError(err);
     });
 
-    if (userValid === undefined)
+    if (userValid === undefined) {
       return res
         .status(401)
         .json({ message: "Add comments failed. User ID is not valid." });
-    else {
+    } else {
       const postValid = await Posts.findOne({
         id: cmtParams.postId
       }).catch(err => {
         res.serverError(err);
       });
 
-      if (postValid === undefined)
+      if (postValid === undefined) {
         return res
           .status(401)
           .json({ message: "Add comments failed. Post ID is not valid." });
-      else {
+      } else {
         await PostComments.create(cmtParams)
           .then(() => {
             return res.status(201).ok();
@@ -191,14 +200,15 @@ module.exports = {
       });
     }
 
-    if (!postId)
+    if (!postId) {
       return res
         .status(401)
         .json({ message: "Comments failed. User id request." });
+    }
 
     await Posts.findOne({
       where: { id: postId },
-      select: ["id", "createdAt", "commentsDisabled", "ownerId"]
+      select: ["id", "createdAt", "commentsDisabled"]
     })
       .populate("commentsId", {
         skip: (page - 1) * limit,
@@ -210,45 +220,47 @@ module.exports = {
           return res.serverError(err);
         }
 
-        return res.status(200).json(result);
+        return res.status(200).send({ message: "comments added" });
       });
   },
   likeComments: async (req, res) => {
     const userId = req.body.userId || undefined;
     const commentsId = req.body.commentsId || undefined;
 
-    if (!userId)
+    if (!userId) {
       return res.send({
         message: "user id request"
       });
+    }
 
-    if (!commentsId)
+    if (!commentsId) {
       return res.send({
         message: "post comments id request"
       });
+    }
 
     const userValid = await User.findOne({
       id: userId
     });
 
-    if (userValid === undefined)
+    if (userValid === undefined) {
       return res.send({ message: "user id not valid" });
-    else {
+    } else {
       const postValid = await PostComments.findOne({
         id: commentsId
       });
 
-      if (postValid === undefined)
+      if (postValid === undefined) {
         return res.send({ message: "post comments id not valid" });
-      else {
+      } else {
         const userLiked = await PostCommentsLikes.findOne({
           userId: userId,
           postCommentsId: commentsId
         });
 
-        if (userLiked !== undefined)
+        if (userLiked !== undefined) {
           return res.send({ message: "user id has liked this post id" });
-        else {
+        } else {
           await PostCommentsLikes.create({
             userId: userId,
             postCommentsId: commentsId

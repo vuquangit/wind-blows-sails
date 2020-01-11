@@ -15,7 +15,16 @@ module.exports.policies = {
    * (`true` allows public access)                                            *
    *                                                                          *
    ***************************************************************************/
-
   // '*': true,
-  "testApi/test": ["required"]
+  //
+  // PageController: {
+  //   "*": "checkForUser",
+  //   welcome: "isAuthenticated",
+  //   profile: "isAuthenticated"
+  // },
+  // UserController: {
+  //   "*": "isAuthenticated",
+  //   login: true,
+  //   register: true
+  // }
 };
