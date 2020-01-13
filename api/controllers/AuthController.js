@@ -83,6 +83,8 @@ module.exports = {
       username: req.body.username || null,
       fullName: req.body.fullName || null,
       password: req.body.password || null,
+      phoneNumber: req.body.phoneNumber || null,
+      emailVerified: false,
       isNew: true,
       isVerified: false
     };
@@ -132,10 +134,7 @@ module.exports = {
     });
   },
   currentUser: async function(req, res) {
-    // var values = req.allParams();
     const email = req.body.email;
-
-    // console.log(values);
 
     if (!email) {
       return res.status(401).send({
@@ -162,14 +161,16 @@ module.exports = {
       const userParams = {
         email: email,
         fullName: req.body.fullName || "",
+        emailVerified: req.body.emailVerified || false,
+        phoneNumber: req.body.phoneNumber || null,
         isNew: true,
         isVerified: false
       };
 
       newUser = await AuthService.createUser(userParams, false);
 
-      console.log(newUser);
-      return res.send(newUser);
+      // console.log(newUser);
+      return res.status(201).send(newUser);
     } else {
       // console.log("userFound: ", userFound);
 
@@ -188,7 +189,7 @@ module.exports = {
 
   logout: function(req, res) {
     res.clearCookie("sailsjwt");
-    // req.user = null
+    req.user = null;
     return res.ok();
   }
 };

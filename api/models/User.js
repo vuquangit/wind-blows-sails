@@ -65,7 +65,15 @@ module.exports = {
       type: "boolean",
       defaultsTo: false
     },
-    isUnpublished: { type: "string" },
+
+    isUnpublished: {
+      type: "string"
+    },
+
+    emailVerified: {
+      type: "boolean",
+      defaultsTo: false
+    },
 
     // Add a reference to Follower model
     following: {

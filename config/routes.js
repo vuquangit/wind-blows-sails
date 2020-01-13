@@ -31,7 +31,7 @@ module.exports.routes = {
    *                                                                          *
    ***************************************************************************/
   // Auth controllers
-  "POST /api/v1/auth/me/": "AuthController.currentUser",
+  "PUT /api/v1/auth/me/": "AuthController.currentUser",
   "POST /api/v1/signup": "AuthController.signup",
   "POST /api/v1/login": "AuthController.login",
 
