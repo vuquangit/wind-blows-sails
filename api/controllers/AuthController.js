@@ -27,6 +27,7 @@ module.exports = {
         "bio",
         "fullName",
         "email",
+        "gender",
         "isNew",
         "isPrivate",
         "profilePictureUrl",
@@ -34,7 +35,8 @@ module.exports = {
         "username",
         "website",
         "isVerified",
-        "password"
+        "password",
+        "isUnpublished"
       ]
     }).catch(err => {
       return res.serverError(err);
@@ -61,7 +63,10 @@ module.exports = {
     const passValid = await bcrypt.compare(password, userFound.password);
 
     if (!passValid)
-      return res.status(401).send({ message: "Invalid Credentials" });
+      return res.status(401).send({ message: "Password not correct!" });
+
+    // counts of user
+    const counts = await UserService.counts(userFound.id);
 
     // if no errors were thrown, then grant them a new token
     // set these config vars in config/local.js, or preferably in config/env/production.js as an environment variable
@@ -75,7 +80,7 @@ module.exports = {
       maxAge: 3600
     });
 
-    res.status(200).json({ user: userFound, token: token });
+    res.status(200).json({ user: { ...userFound, counts }, token: token });
   },
   signup: async (req, res) => {
     const userParams = {
@@ -84,6 +89,8 @@ module.exports = {
       fullName: req.body.fullName || null,
       password: req.body.password || null,
       phoneNumber: req.body.phoneNumber || null,
+      profilePictureUrl: req.body.profilePictureUrl || "",
+      profilePictureUrlHd: req.body.profilePictureUrlHd || "",
       emailVerified: false,
       isNew: true,
       isVerified: false
@@ -111,13 +118,38 @@ module.exports = {
         return res.badRequest("Doesn't look like an email address.");
       },
       success: async function() {
-        const userFound = await User.findOne({ email: userParams.email });
-        // console.log(userFound);
+        const userFound = await User.findOne({
+          where: { email: userParams.email },
+          select: [
+            "id",
+            "bio",
+            "fullName",
+            "email",
+            "gender",
+            "isNew",
+            "isPrivate",
+            "profilePictureUrl",
+            "profilePictureUrlHd",
+            "username",
+            "website",
+            "isVerified",
+            "isUnpublished"
+          ]
+        });
+
         if (userFound !== undefined) {
           return res.status(401).send({ message: "Email already exists." });
         }
 
-        user = AuthService.createUser(userParams, true);
+        // Create new user
+        user = await AuthService.createUser(userParams, true);
+
+        // Default counts of user
+        const counts = {
+          followedBy: 0,
+          follows: 0,
+          media: 0
+        };
 
         // after creating a user record, log them in at the same time by issuing their first jwt token and setting a cookie
         var token = jwt.sign({ user: user.id }, process.env.JWT_SECRET, {
@@ -129,7 +161,7 @@ module.exports = {
           maxAge: 3600
         });
 
-        return res.status(201).send({ user: userFound, token });
+        return res.status(201).send({ user: { ...user, counts }, token });
       }
     });
   },
@@ -147,33 +179,54 @@ module.exports = {
         email: email
       },
       select: [
+        "id",
         "bio",
         "fullName",
-        "username",
+        "email",
+        "gender",
         "isNew",
         "isPrivate",
         "profilePictureUrl",
-        "isVerified"
+        "profilePictureUrlHd",
+        "username",
+        "website",
+        "isVerified",
+        "isUnpublished"
       ]
     }).catch(err => res.serverError(err));
 
+    // Create new user
     if (userFound === undefined) {
       const userParams = {
         email: email,
         fullName: req.body.fullName || "",
+        username: req.body.username || undefined,
         emailVerified: req.body.emailVerified || false,
-        phoneNumber: req.body.phoneNumber || null,
+        phoneNumber: req.body.phoneNumber || "",
+        profilePictureUrl: req.body.profilePictureUrl || "",
+        profilePictureUrlHd: req.body.profilePictureUrlHd || "",
+        isPrivate: false,
+        website: "",
         isNew: true,
         isVerified: false
       };
 
       newUser = await AuthService.createUser(userParams, false);
+      var token = jwt.sign({ user: newUser.id }, process.env.JWT_SECRET, {
+        expiresIn: 3600
+      });
+      // set a cookie on the client side that they can't modify unless they sign out (just for web apps)
+      res.cookie("sailsjwt", token, {
+        signed: true,
+        maxAge: 3600
+      });
 
-      // console.log(newUser);
-      return res.status(201).send(newUser);
+      return res.status(200).send({ user: newUser, token });
     } else {
-      // console.log("userFound: ", userFound);
+      // counts of user
+      const counts = await UserService.counts(userFound.id);
 
+      // Token user
       var token = jwt.sign({ user: userFound.id }, process.env.JWT_SECRET, {
         expiresIn: 3600
       });
@@ -183,13 +236,13 @@ module.exports = {
         maxAge: 3600
       });
 
-      return res.status(200).send({ user: userFound, token });
+      return res.status(200).send({ user: { ...userFound, counts }, token });
     }
   },
 
   logout: function(req, res) {
     res.clearCookie("sailsjwt");
-    req.user = null;
+    res.user = null;
     return res.ok();
   }
 };

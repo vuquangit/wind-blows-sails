@@ -1,6 +1,6 @@
 module.exports = {
   posts: async (req, res) => {
-    const userId = req.body.id || undefined;
+    const userId = req.query.id || undefined;
     const limit = parseInt(req.query.limit || 20);
     const page = parseInt(req.query.page || 1);
 
@@ -10,7 +10,7 @@ module.exports = {
       });
     }
 
-    if (!userId) return res.send({ message: "User id is request" });
+    if (!userId) return res.status(401).send({ message: "User id is request" });
 
     const postFound = await User.findOne({
       where: { id: userId },
@@ -20,7 +20,70 @@ module.exports = {
       limit: limit,
       sort: "createdAt DESC"
     });
+    if (postFound !== undefined) return res.send(postFound);
+    else res.status(401).send({ message: "User id not found" });
+  },
+  userIdInfo: async (req, res) => {
+    const userId = req.params.id || undefined;
 
-    return res.send(postFound);
+    if (!userId) return res.status(401).send({ message: "User id is request" });
+
+    const userFound = await User.findOne({
+      where: { id: userId },
+      select: [
+        "id",
+        "bio",
+        "fullName",
+        "email",
+        "isNew",
+        "isPrivate",
+        "profilePictureUrl",
+        "profilePictureUrlHd",
+        "username",
+        "website",
+        "isVerified"
+      ]
+    });
+
+    if (userFound !== undefined) {
+      // counts of user
+      const counts = await UserService.counts(userFound.id);
+
+      return res.status(200).send({ ...userFound, counts });
+    } else {
+      return res.status(401).send({ message: "User id not found" });
+    }
+  },
+  userNameInfo: async (req, res) => {
+    const username = req.params.username || undefined;
+
+    if (!username)
+      return res.status(401).send({ message: "User name is request" });
+
+    const userFound = await User.findOne({
+      where: { username: username },
+      select: [
+        "id",
+        "bio",
+        "fullName",
+        "email",
+        "isNew",
+        "isPrivate",
+        "profilePictureUrl",
+        "profilePictureUrlHd",
+        "username",
+        "website",
+        "isVerified"
+      ]
+    });
+
+    if (userFound !== undefined) {
+      // counts of user
+      const counts = await UserService.counts(userFound.id);
+
+      return res.status(200).send({ ...userFound, counts });
+    } else {
+      return res.status(401).send({ message: "User name not found" });
+    }
   }
 };

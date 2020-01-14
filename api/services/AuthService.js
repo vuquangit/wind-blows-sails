@@ -1,7 +1,5 @@
 module.exports = {
   createUser: async (userParams, isRequestPassword) => {
-    // console.log(userParams);
-
     if (isRequestPassword) {
       if (!userParams.email || !userParams.password) {
         return res.status(401).send({
@@ -12,6 +10,18 @@ module.exports = {
       return res.status(401).send({
         message: "Email required"
       });
+    }
+
+    if (!!userParams.username) {
+      const usernameFound = await User.findOne({
+        username: userParams.username
+      });
+
+      if (usernameFound !== undefined) {
+        return res
+          .status(401)
+          .send({ message: "Failed. The username already exists" });
+      }
     }
 
     var newUser = await User.create(userParams)
@@ -29,7 +39,14 @@ module.exports = {
         }
       )
       .fetch();
-    // If something completely unexpected happened, the error will be thrown as-is.
+
+    if (!userParams.username) {
+      const _modifiedUser = await User.updateOne({ id: newUser.id }).set({
+        username: newUser.id
+      });
+
+      return _modifiedUser;
+    }
 
     return newUser;
   }

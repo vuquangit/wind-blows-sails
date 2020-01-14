@@ -67,12 +67,17 @@ module.exports = {
     },
 
     isUnpublished: {
-      type: "string"
+      type: "boolean",
+      defaultsTo: false
     },
 
     emailVerified: {
       type: "boolean",
       defaultsTo: false
+    },
+
+    gender: {
+      type: "string"
     },
 
     // Add a reference to Follower model

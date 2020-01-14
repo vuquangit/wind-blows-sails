@@ -36,13 +36,15 @@ module.exports.routes = {
   "POST /api/v1/login": "AuthController.login",
 
   // User controllers
-  "POST /api/v1/posts": "UserController.posts",
+  "GET /api/v1/username/:username": "UserController.userNameInfo",
+  "GET /api/v1/user/:id": "UserController.userIdInfo",
+  "GET /api/v1/posts": "UserController.posts",
 
   // Follow controllers
   "POST /api/v1/add-following": "FollowController.addFollow",
   "POST /api/v1/unfollow": "FollowController.unfollow",
-  "POST /api/v1/following": "FollowController.following",
-  "POST /api/v1/follower": "FollowController.follower",
+  "GET /api/v1/following": "FollowController.following",
+  "GET /api/v1/follower": "FollowController.follower",
 
   // Blocked controllers
   "POST /api/v1/add-user-blocked": "BlockedController.addUserBlocked",

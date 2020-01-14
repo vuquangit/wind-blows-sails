@@ -94,7 +94,7 @@ module.exports = {
     return res.status(200).send("Unfollowed. Done");
   },
   following: async (req, res) => {
-    const id = req.body.id || undefined;
+    const id = req.query.id || undefined;
     const limit = parseInt(req.query.limit || 20);
     const page = parseInt(req.query.page || 1);
 
@@ -171,7 +171,7 @@ module.exports = {
     }
   },
   follower: async (req, res) => {
-    const id = req.body.id;
+    const id = req.query.id || undefined;
     const limit = parseInt(req.query.limit || 20);
     const page = parseInt(req.query.page || 1);
 
