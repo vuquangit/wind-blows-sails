@@ -110,16 +110,6 @@ module.exports = {
         message: "id request"
       });
     }
-
-    const userFound = await User.findOne({
-      where: { id: id }
-    });
-
-    if (userFound === undefined) {
-      return res.send({
-        message: "viewer id not found"
-      });
-    }
     //#endregion
 
     // find list
@@ -170,6 +160,82 @@ module.exports = {
       res.status(200).send(follows);
     }
   },
+  usernameFollowing: async (req, res) => {
+    const username = req.query.username || undefined;
+    const viewerId = req.query.viewerId || undefined;
+    const limit = parseInt(req.query.limit || 20);
+    const page = parseInt(req.query.page || 1);
+
+    //#region check valid
+    if ((page - 1) * limit < 0)
+      return res.send({
+        message: "page or limit not correct"
+      });
+
+    if (!username)
+      return res.status(401).send({
+        message: "username request"
+      });
+
+    if (!viewerId)
+      return res.status(401).send({
+        message: "viewer Id request"
+      });
+
+    //#endregion
+
+    // find list
+    const userFound = await User.findOne({
+      where: { username: username },
+      select: ["id", "username", "fullName"]
+    }).populate("following", {
+      select: [
+        "id",
+        "fullName",
+        "isNew",
+        "isPrivate",
+        "profilePictureUrl",
+        "username",
+        "isVerified"
+      ],
+      skip: (page - 1) * limit,
+      limit: limit
+    });
+
+    if (userFound === undefined)
+      return res.send({ message: "username not found" });
+    else {
+      // counts follows
+      const counts = await UserService.counts(userFound.id);
+
+      if (userFound.following.length > 0) {
+        // Check viewer ID
+        const viewerFound = await User.findOne({ id: viewerId });
+        if (viewerFound === undefined)
+          return res.send({ message: "viewer ID not found" });
+
+        // fetch following info
+        const fetchFollowing = async () => {
+          const fetchRelationship = userFound.following.map(
+            async (item, idx) => {
+              const relationship = await FollowService.relationship(
+                item.id,
+                viewerId
+              );
+
+              return { user: item, relationship: relationship };
+            }
+          );
+
+          return Promise.all(fetchRelationship);
+        };
+
+        fetchFollowing().then(following => {
+          return res.status(200).send({ ...userFound, counts, following });
+        });
+      } else return res.status(200).send({ ...userFound, counts });
+    }
+  },
   follower: async (req, res) => {
     const id = req.query.id || undefined;
     const limit = parseInt(req.query.limit || 20);
@@ -216,5 +282,80 @@ module.exports = {
     });
     if (followingList === undefined) return res.send({});
     else res.status(200).send(followingList);
+  },
+  usernameFollowers: async (req, res) => {
+    const username = req.query.username || undefined;
+    const viewerId = req.query.viewerId || undefined;
+    const limit = parseInt(req.query.limit || 20);
+    const page = parseInt(req.query.page || 1);
+
+    //#region check valid
+    if ((page - 1) * limit < 0)
+      return res.send({
+        message: "page or limit not correct"
+      });
+
+    if (!username)
+      return res.status(401).send({
+        message: "username request"
+      });
+
+    if (!viewerId)
+      return res.status(401).send({
+        message: "viewer Id request"
+      });
+
+    //#endregion
+
+    // find list
+    const userFound = await User.findOne({
+      where: { username: username },
+      select: ["id", "username", "fullName"]
+    }).populate("follower", {
+      select: [
+        "id",
+        "fullName",
+        "isNew",
+        "isPrivate",
+        "profilePictureUrl",
+        "username",
+        "isVerified"
+      ],
+      skip: (page - 1) * limit,
+      limit: limit
+    });
+
+    if (userFound === undefined)
+      return res.send({ message: "username not found" });
+    else {
+      const counts = await UserService.counts(userFound.id);
+
+      if (userFound.follower.length > 0) {
+        // Check viewer ID
+        const viewerFound = await User.findOne({ id: viewerId });
+        if (viewerFound === undefined)
+          return res.send({ message: "viewer ID not found" });
+
+        // fetch follower info
+        const fetchFollowers = async () => {
+          const fetchRelationship = userFound.follower.map(
+            async (item, idx) => {
+              const relationship = await FollowService.relationship(
+                item.id,
+                viewerId
+              );
+
+              return { user: item, relationship: relationship };
+            }
+          );
+
+          return Promise.all(fetchRelationship);
+        };
+
+        fetchFollowers().then(follower => {
+          return res.status(200).send({ ...userFound, counts, follower });
+        });
+      } else return res.status(200).send({ ...userFound, counts });
+    }
   }
 };
