@@ -11,41 +11,71 @@ var Emailaddresses = require("machinepack-emailaddresses");
 
 module.exports = {
   login: async (req, res) => {
-    var email = req.body.email || undefined;
-    var password = req.body.password || undefined;
+    const email = req.body.email || undefined;
+    const username = req.body.username || undefined;
+    const password = req.body.password || undefined;
 
-    if (!email || !password) {
+    // if (!(!!email && !!username)) {
+    //   return res.status(401).send({
+    //     message: "Email or username required"
+    //   });
+    // }
+
+    if (!username) {
+      if (!email)
+        return res.status(401).send({
+          message: "Email or username required"
+        });
+    }
+
+    if (!password) {
       return res.status(401).send({
-        message: "Email and password required"
+        message: "Password required"
       });
     }
 
-    const userFound = await User.findOne({
-      where: { email: email },
-      select: [
-        "id",
-        "bio",
-        "fullName",
-        "email",
-        "gender",
-        "isNew",
-        "isPrivate",
-        "profilePictureUrl",
-        "profilePictureUrlHd",
-        "username",
-        "website",
-        "isVerified",
-        "password",
-        "isUnpublished"
-      ]
-    }).catch(err => {
-      return res.serverError(err);
-    });
+    let userFound = undefined;
+    const selectDefault = [
+      "id",
+      "bio",
+      "fullName",
+      "email",
+      "gender",
+      "isNew",
+      "isPrivate",
+      "profilePictureUrl",
+      "profilePictureUrlHd",
+      "username",
+      "website",
+      "isVerified",
+      "password",
+      "isUnpublished"
+    ];
 
-    if (userFound === undefined) {
-      return res.status(401).json({
-        message: "Invalid email"
+    if (email !== undefined) {
+      userFound = await User.findOne({
+        where: { email: email },
+        select: selectDefault
       });
+    }
+
+    if (userFound === undefined && username === undefined) {
+      return res.status(401).send({
+        message:
+          "The email you entered doesn't belong to an account. Please check your email and try again."
+      });
+    } else if (username !== undefined) {
+      userFound = await User.findOne({
+        where: { username: username },
+        select: selectDefault
+      });
+
+      if (userFound === undefined) {
+        return res.status(401).send({
+          message:
+            "The username you entered doesn't belong to an account. Please check your username and try again."
+        });
+      }
     }
 
     // User.validatePassword(password, userFound, (err, valid) => {
@@ -63,9 +93,12 @@ module.exports = {
     const passValid = await bcrypt.compare(password, userFound.password);
 
     if (!passValid)
-      return res.status(401).send({ message: "Password not correct!" });
+      return res.status(401).send({
+        message:
+          "Sorry, your password was incorrect. Please double-check your password."
+      });
 
-    // counts of user
+    // count follow, media of user
     const counts = await UserService.counts(userFound.id);
 
     // if no errors were thrown, then grant them a new token
@@ -80,7 +113,7 @@ module.exports = {
       maxAge: 3600
     });
 
-    res.status(200).json({ user: { ...userFound, counts }, token: token });
+    res.status(200).send({ user: { ...userFound, counts }, token: token });
   },
   signup: async (req, res) => {
     const userParams = {
@@ -97,15 +130,17 @@ module.exports = {
     };
 
     if (_.isUndefined(req.param("email"))) {
-      return res.badRequest("An email address is required.");
+      return res.status(401).send({ message: "An email address is required." });
     }
 
     if (_.isUndefined(req.param("password"))) {
-      return res.badRequest("A password is required.");
+      return res.status(401).send({ message: "A password is required." });
     }
 
     if (req.param("password").length < 8) {
-      return res.badRequest("Password must be at least 8 characters.");
+      return res
+        .status(401)
+        .send({ message: "Password must be at least 8 characters." });
     }
 
     Emailaddresses.validate({
@@ -115,31 +150,24 @@ module.exports = {
         return res.serverError(err);
       },
       invalid: function() {
-        return res.badRequest("Doesn't look like an email address.");
+        return res
+          .status(401)
+          .send({ message: "Doesn't look like an email address." });
       },
       success: async function() {
-        const userFound = await User.findOne({
-          where: { email: userParams.email },
-          select: [
-            "id",
-            "bio",
-            "fullName",
-            "email",
-            "gender",
-            "isNew",
-            "isPrivate",
-            "profilePictureUrl",
-            "profilePictureUrlHd",
-            "username",
-            "website",
-            "isVerified",
-            "isUnpublished"
-          ]
+        // check email
+        const emailFound = await User.findOne({
+          where: { email: userParams.email }
         });
-
-        if (userFound !== undefined) {
+        if (emailFound !== undefined)
           return res.status(401).send({ message: "Email already exists." });
-        }
+
+        // check username
+        const usernameFound = await User.findOne({
+          where: { username: userParams.username }
+        });
+        if (usernameFound !== undefined)
+          return res.status(401).send({ message: "username already exists." });
 
         // Create new user
         user = await AuthService.createUser(userParams, true);

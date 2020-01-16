@@ -32,8 +32,8 @@ module.exports.routes = {
    ***************************************************************************/
   // Auth controllers
   "PUT /api/v1/auth/me/": "AuthController.currentUser",
-  "POST /api/v1/signup": "AuthController.signup",
-  "POST /api/v1/login": "AuthController.login",
+  "POST /api/v1/auth/signup": "AuthController.signup",
+  "POST /api/v1/auth/login": "AuthController.login",
 
   // User controllers
   "GET /api/v1/username/:username": "UserController.userNameInfo",
