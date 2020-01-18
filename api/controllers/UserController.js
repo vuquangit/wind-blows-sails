@@ -55,7 +55,8 @@ module.exports = {
     }
   },
   userNameInfo: async (req, res) => {
-    const username = req.params.username || undefined;
+    const username = req.body.username || undefined;
+    const viewerId = req.body.viewerId || undefined;
 
     if (!username)
       return res.status(401).send({ message: "User name is request" });
@@ -81,7 +82,16 @@ module.exports = {
       // counts of user
       const counts = await UserService.counts(userFound.id);
 
-      return res.status(200).send({ ...userFound, counts });
+      if (viewerId !== undefined && viewerId !== userFound.id) {
+        const relationship = await FollowService.relationship(
+          userFound.id,
+          viewerId
+        );
+
+        return res
+          .status(200)
+          .send({ user: { ...userFound, counts }, relationship: relationship });
+      } else return res.status(200).send({ user: { ...userFound, counts } });
     } else {
       return res.status(401).send({ message: "User name not found" });
     }

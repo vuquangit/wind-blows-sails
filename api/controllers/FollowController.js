@@ -1,79 +1,79 @@
 module.exports = {
   addFollow: async (req, res) => {
-    const idOnwer = req.body ? req.body.id : undefined;
-    const idFollowing = req.body ? req.body.idFollowing : undefined;
+    const viewerId = req.body ? req.body.viewerId : undefined;
+    const userId = req.body ? req.body.userId : undefined;
 
     //#region Check valid
-    if (!idOnwer || !idFollowing) {
+    if (!viewerId || !userId) {
       return res.status(401).send({
         message: "id or id following request"
       });
     }
 
-    if (idOnwer === idFollowing) {
-      return res.send({
+    if (viewerId === userId) {
+      return res.status(401).send({
         message: "id and id following is duplicate"
       });
     }
 
     // check id owner
     const userOwner = await User.findOne({
-      where: { id: idOnwer }
+      where: { id: viewerId }
     });
 
     if (userOwner === undefined) {
-      return res.send({
+      return res.status(401).send({
         message: "owner id not found"
       });
     }
 
     // check id follow
     const userFollowing = await User.findOne({
-      where: { id: idFollowing }
+      where: { id: userId }
     });
 
     if (userFollowing === undefined) {
-      return res.send({
+      return res.status(401).send({
         message: "user id will following not found"
       });
     }
     //#endregion
 
     const followFound = await User.findOne({
-      where: { id: idOnwer }
+      where: { id: viewerId }
     }).populate("following", {
-      where: { id: idFollowing }
+      where: { id: userId }
     });
 
     if (followFound.following.length)
-      return res.send({ message: "owner id adready following" });
-    else await User.addToCollection(idOnwer, "following", idFollowing);
+      return res.status(401).send({ message: "owner id adready following" });
+    else await User.addToCollection(viewerId, "following", userId);
 
-    return res.status(200).send("Followed. Done");
+    return res.status(200).send("You have already followed this account");
   },
   unfollow: async (req, res) => {
-    const idOnwer = req.body.id;
-    const idUnfollow = req.body.idUnfollow;
+    const viewerId = req.body.viewerId;
+    const idUnfollow = req.body.userId;
 
-    if (!idOnwer || !idUnfollow) {
+    if (!viewerId || !idUnfollow) {
       return res.status(401).send({
         message: "owner id or following id is request"
       });
     }
 
-    if (idOnwer === idUnfollow) {
-      return res.send({
+    if (viewerId === idUnfollow) {
+      return res.status(401).send({
         message: "owner ID and following ID is duplicate"
       });
     }
 
     // check id owner
     const userFound = await User.find({
-      where: { id: idOnwer }
+      where: { id: viewerId }
     });
 
     if (userFound.length === 0) {
-      return res.send({
+      return res.status(401).send({
         message: "user id not found"
       });
     }
@@ -84,14 +84,14 @@ module.exports = {
     });
 
     if (userFollowing.length === 0) {
-      return res.send({
+      return res.status(401).send({
         message: "user id will following not found"
       });
     }
 
-    await User.removeFromCollection(idOnwer, "following", idUnfollow);
+    await User.removeFromCollection(viewerId, "following", idUnfollow);
 
-    return res.status(200).send("Unfollowed. Done");
+    return res.status(200).send("You have unfollowed this account");
   },
   following: async (req, res) => {
     const id = req.query.id || undefined;
