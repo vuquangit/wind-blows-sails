@@ -64,5 +64,8 @@ module.exports.routes = {
   "POST /api/v1/like-comments": "PostController.likeComments",
 
   // Save post controllers
-  "POST /api/v1/saved-post": "SavePostController.saved"
+  "POST /api/v1/saved-post": "SavePostController.saved",
+
+  // Image upload
+  "POST /api/v1/image-upload": "ImageUploadController.imageUpload"
 };
