@@ -2,15 +2,12 @@ module.exports = {
   attributes: {
     id: { type: "number", columnName: "_id" },
     caption: { type: "string", defaultsTo: "" },
-    commentsDisabled: { type: "boolean", defaultsTo: false },
-    isSidecar: { type: "boolean" },
-    isVideo: { type: "boolean" },
-    location: { type: "string", defaultsTo: "" },
-    sidecarChildren: { type: "string" },
-    src: { type: "string" },
     captionIsEdited: { type: "boolean" },
+    commentsDisabled: { type: "boolean", defaultsTo: false },
+    location: { type: "json" },
+    sidecarChildren: { type: "json" },
 
-    // Add a reference to User
+    // references
     ownerId: {
       collection: "user",
       via: "postId"

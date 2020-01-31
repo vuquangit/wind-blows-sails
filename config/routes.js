@@ -56,12 +56,12 @@ module.exports.routes = {
   "POST /api/v1/blocked": "BlockedController.blocked",
 
   // Post controllers
-  "POST /api/v1/add-post": "PostController.addPost",
   "POST /api/v1/post": "PostController.post",
-  "POST /api/v1/like-post": "PostController.likePost",
-  "POST /api/v1/add-comments": "PostController.addComments",
-  "POST /api/v1/comments": "PostController.comments",
-  "POST /api/v1/like-comments": "PostController.likeComments",
+  "POST /api/v1/post/add": "PostController.addPost",
+  "POST /api/v1/post/like": "PostController.likePost",
+  "POST /api/v1/post/comments": "PostController.comments",
+  "POST /api/v1/post/comments/add": "PostController.addComments",
+  "POST /api/v1/post/comments/like": "PostController.likeComments",
 
   // Save post controllers
   "POST /api/v1/saved-post": "SavePostController.saved",

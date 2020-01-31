@@ -4,16 +4,19 @@ module.exports = {
       caption: req.body.caption || "",
       commentsDisabled: req.body.commentsDisabled || false,
       location: req.body.location || "",
-      src: req.body.src || undefined,
       captionIsEdited: req.body.captionIsEdited || false,
-      ownerId: req.body.ownerId || undefined
+      ownerId: req.body.ownerId || undefined,
+      sidecarChildren: req.body.sidecarChildren || undefined
     };
 
     if (!postParams.ownerId) {
       return res.status(401).json({ message: "Add failed. Owner ID request." });
     }
 
-    if (!postParams.src) {
+    if (
+      postParams.sidecarChildren === undefined ||
+      postParams.sidecarChildren.length === 0
+    ) {
       return res
         .status(401)
         .json({ message: "Add failed. Image source request" });
@@ -38,6 +41,7 @@ module.exports = {
   },
   post: async (req, res) => {
     const postId = req.body.postId || undefined;
+    const viewerId = req.body.viewerId || undefined;
 
     if (!postId) {
       return res
@@ -46,8 +50,8 @@ module.exports = {
     }
 
     await Posts.findOne({
-      where: { id: postId },
-      select: ["id", "caption", "createdAt", "commentsDisabled"]
+      where: { id: postId }
+      // select: ["id", "caption", "createdAt", "commentsDisabled"]
     })
       .populate("ownerId", {
         select: [
@@ -71,7 +75,22 @@ module.exports = {
             message: "Post ID not found"
           });
         } else {
-          return res.status(200).json(result);
+          console.log(result);
+          const ownerId = result.ownerId[0].id;
+          if (viewerId !== undefined) {
+            const getRelationship = async () => {
+              const data = await FollowService.relationship(ownerId, viewerId);
+              return data;
+            };
+
+            getRelationship().then(relationship => {
+              return res.status(200).send({
+                post: { ...result, owner: { ...result.ownerId[0] } },
+                owner: { ...result.ownerId[0] },
+                relationship: relationship
+              });
+            });
+          } else return res.status(200).send(result);
         }
       });
   },

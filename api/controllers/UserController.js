@@ -10,23 +10,63 @@ module.exports = {
       });
     }
 
-    if (!userId) return res.status(401).send({ message: "User id is request" });
+    if (!userId) {
+      return res.status(401).send({ message: "User id is request" });
+    }
 
     const postFound = await User.findOne({
       where: { id: userId },
-      select: ["username", "isVerified"]
-    }).populate("postId", {
-      skip: (page - 1) * limit,
-      limit: limit,
-      sort: "createdAt DESC"
-    });
-    if (postFound !== undefined) return res.send(postFound);
-    else res.status(401).send({ message: "User id not found" });
+      select: [
+        "username",
+        "isVerified",
+        "fullName",
+        "isPrivate",
+        "profilePictureUrl"
+      ]
+    })
+      .populate("postId", {
+        skip: (page - 1) * limit,
+        limit: limit,
+        sort: "createdAt DESC"
+      })
+      .then(user => {
+        if (user) {
+          if (user.postId.length > 0) {
+            const {
+              username,
+              isVerified,
+              fullName,
+              isPrivate,
+              profilePictureUrl
+            } = user;
+
+            const owner = {
+              username,
+              isVerified,
+              fullName,
+              isPrivate,
+              profilePictureUrl
+            };
+
+            return user.postId.map((item, idx) => {
+              return { ...item, owner: owner };
+            });
+          }
+        }
+      });
+
+    if (postFound !== undefined) {
+      return res.send(postFound);
+    } else {
+      res.status(401).send({ message: "User id not found" });
+    }
   },
   userIdInfo: async (req, res) => {
     const userId = req.params.id || undefined;
 
-    if (!userId) return res.status(401).send({ message: "User id is request" });
+    if (!userId) {
+      return res.status(401).send({ message: "User id is request" });
+    }
 
     const userFound = await User.findOne({
       where: { id: userId },
@@ -58,8 +98,9 @@ module.exports = {
     const username = req.body.username || undefined;
     const viewerId = req.body.viewerId || undefined;
 
-    if (!username)
+    if (!username) {
       return res.status(401).send({ message: "User name is request" });
+    }
 
     const userFound = await User.findOne({
       where: { username: username },
@@ -91,7 +132,9 @@ module.exports = {
         return res
           .status(200)
           .send({ user: { ...userFound, counts }, relationship: relationship });
-      } else return res.status(200).send({ user: { ...userFound, counts } });
+      } else {
+        return res.status(200).send({ user: { ...userFound, counts } });
+      }
     } else {
       return res.status(401).send({ message: "User name not found" });
     }

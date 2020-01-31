@@ -1,14 +1,14 @@
 module.exports = {
   relationship: async (ownerId, viewerId) => {
     if (!ownerId)
-      return res.status(401).send({
+      return {
         message: "owner ID request"
-      });
+      };
 
     if (!viewerId)
-      return res.status(401).send({
+      return {
         message: "viewer ID request"
-      });
+      };
 
     const relationshipDefault = {
       blockedByViewer: {
