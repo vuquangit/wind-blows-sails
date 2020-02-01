@@ -39,6 +39,7 @@ module.exports.routes = {
   "POST /api/v1/username/": "UserController.userNameInfo",
   "GET /api/v1/user/:id": "UserController.userIdInfo",
   "GET /api/v1/posts": "UserController.posts",
+  "POST /api/v1/users/update": "UserController.updateInfoUser",
 
   // Follow controllers
   "POST /api/v1/follows/add": "FollowController.addFollow",

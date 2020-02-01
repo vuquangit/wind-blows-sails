@@ -75,7 +75,6 @@ module.exports = {
             message: "Post ID not found"
           });
         } else {
-          console.log(result);
           const ownerId = result.ownerId[0].id;
           if (viewerId !== undefined) {
             const getRelationship = async () => {

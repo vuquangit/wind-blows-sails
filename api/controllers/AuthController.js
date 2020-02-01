@@ -219,7 +219,8 @@ module.exports = {
         "username",
         "website",
         "isVerified",
-        "isUnpublished"
+        "isUnpublished",
+        "phoneNumber"
       ]
     }).catch(err => res.serverError(err));
 

@@ -138,5 +138,33 @@ module.exports = {
     } else {
       return res.status(401).send({ message: "User name not found" });
     }
+  },
+  updateInfoUser: async (req, res) => {
+    const userParams = {
+      id: req.body.email || undefined,
+      email: req.body.email || undefined,
+      username: req.body.username || null,
+      fullName: req.body.fullName || null,
+      phoneNumber: req.body.phoneNumber || null,
+      website: req.body.website || null,
+      profilePictureUrl: req.body.profilePictureUrl || "",
+      profilePictureUrlHd: req.body.profilePictureUrlHd || ""
+    };
+
+    if (_.isUndefined(req.param("id"))) {
+      return res.status(401).send({ message: "ID user required." });
+    }
+
+    var updatedUser = await User.updateOne({ id: userParams.id }).set(
+      userParams
+    );
+
+    if (updatedUser) {
+      return res.status(200).send({ message: "profile has updated" });
+    } else {
+      return res
+        .status(403)
+        .send({ message: "The database does not contain a user id" });
+    }
   }
 };
