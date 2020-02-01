@@ -22,10 +22,11 @@ module.exports = {
     // }
 
     if (!username) {
-      if (!email)
+      if (!email) {
         return res.status(401).send({
           message: "Email or username required"
         });
+      }
     }
 
     if (!password) {
@@ -49,7 +50,8 @@ module.exports = {
       "website",
       "isVerified",
       "password",
-      "isUnpublished"
+      "isUnpublished",
+      "phoneNumber"
     ];
 
     if (email !== undefined) {
@@ -92,11 +94,12 @@ module.exports = {
 
     const passValid = await bcrypt.compare(password, userFound.password);
 
-    if (!passValid)
+    if (!passValid) {
       return res.status(401).send({
         message:
           "Sorry, your password was incorrect. Please double-check your password."
       });
+    }
 
     // count follow, media of user
     const counts = await UserService.counts(userFound.id);
@@ -159,15 +162,17 @@ module.exports = {
         const emailFound = await User.findOne({
           where: { email: userParams.email }
         });
-        if (emailFound !== undefined)
+        if (emailFound !== undefined) {
           return res.status(401).send({ message: "Email already exists." });
+        }
 
         // check username
         const usernameFound = await User.findOne({
           where: { username: userParams.username }
         });
-        if (usernameFound !== undefined)
+        if (usernameFound !== undefined) {
           return res.status(401).send({ message: "username already exists." });
+        }
 
         // Create new user
         user = await AuthService.createUser(userParams, true);

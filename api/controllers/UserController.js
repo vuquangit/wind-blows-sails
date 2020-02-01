@@ -115,7 +115,8 @@ module.exports = {
         "profilePictureUrlHd",
         "username",
         "website",
-        "isVerified"
+        "isVerified",
+        "phoneNumber"
       ]
     });
 
@@ -141,19 +142,21 @@ module.exports = {
   },
   updateInfoUser: async (req, res) => {
     const userParams = {
-      id: req.body.email || undefined,
+      id: req.body.id || undefined,
       email: req.body.email || undefined,
-      username: req.body.username || null,
-      fullName: req.body.fullName || null,
-      phoneNumber: req.body.phoneNumber || null,
-      website: req.body.website || null,
-      profilePictureUrl: req.body.profilePictureUrl || "",
-      profilePictureUrlHd: req.body.profilePictureUrlHd || ""
+      username: req.body.username || undefined,
+      fullName: req.body.fullName || "",
+      bio: req.body.bio || "",
+      phoneNumber: req.body.phoneNumber || "",
+      website: req.body.website || "",
+      gender: req.body.gender || ""
     };
 
     if (_.isUndefined(req.param("id"))) {
       return res.status(401).send({ message: "ID user required." });
     }
+
+    console.log(userParams);
 
     var updatedUser = await User.updateOne({ id: userParams.id }).set(
       userParams
