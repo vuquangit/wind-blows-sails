@@ -31,8 +31,8 @@ module.exports = {
   deleteImage: async (req, res) => {
     const publicId = req.body.publicId || undefined;
 
-    console.log(req.allParams());
-    console.log("publicId", publicId);
+    // console.log(req.allParams());
+    // console.log("publicId", publicId);
 
     if (!publicId) {
       return res.status(400).send({ message: "public_id image request" });

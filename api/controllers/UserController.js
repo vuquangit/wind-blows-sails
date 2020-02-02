@@ -156,7 +156,14 @@ module.exports = {
       return res.status(401).send({ message: "ID user required." });
     }
 
-    console.log(userParams);
+    // console.log(userParams);
+    // check username
+    const usernameFound = await User.findOne({
+      where: { username: userParams.username }
+    });
+    if (usernameFound !== undefined) {
+      return res.status(401).send({ message: "username already exists." });
+    }
 
     var updatedUser = await User.updateOne({ id: userParams.id }).set(
       userParams
@@ -168,6 +175,33 @@ module.exports = {
       return res
         .status(403)
         .send({ message: "The database does not contain a user id" });
+    }
+  },
+  changeProfilePicture: async (req, res) => {
+    const userId = req.body.userId || undefined;
+    const profilePictureUrl = req.body.profilePictureUrl || undefined;
+
+    // console.log(req.allParams());
+
+    if (_.isUndefined(req.param("userId"))) {
+      return res.status(401).send({ message: "ID user required." });
+    }
+
+    if (_.isUndefined(req.param("profilePictureUrl"))) {
+      return res.status(401).send({ message: "Profile picture URL required." });
+    }
+
+    var updatedUser = await User.updateOne({ id: userId }).set({
+      profilePictureUrl: profilePictureUrl ? profilePictureUrl : ""
+    });
+
+    if (updatedUser) {
+      // console.log(updatedUser);
+      return res.status(200).send({ message: "profile photo has changed " });
+    } else {
+      return res
+        .status(403)
+        .send({ message: "The database does not contain this user id" });
     }
   }
 };

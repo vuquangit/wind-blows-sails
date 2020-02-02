@@ -40,6 +40,8 @@ module.exports.routes = {
   "GET /api/v1/user/:id": "UserController.userIdInfo",
   "GET /api/v1/posts": "UserController.posts",
   "POST /api/v1/users/update": "UserController.updateInfoUser",
+  "POST /api/v1/users/change-profile-photo":
+    "UserController.changeProfilePicture",
 
   // Follow controllers
   "POST /api/v1/follows/add": "FollowController.addFollow",
