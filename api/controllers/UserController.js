@@ -55,8 +55,17 @@ module.exports = {
         }
       });
 
+    const totalItem = await User.findOne({
+      where: { id: userId }
+    })
+      .populate("postId")
+      .then(user => {
+        if (user) return user.postId.length;
+        else return 0;
+      });
+
     if (postFound !== undefined) {
-      return res.send(postFound);
+      return res.send({ data: postFound, totalItem: totalItem });
     } else {
       res.status(401).send({ message: "User id not found" });
     }
@@ -181,8 +190,6 @@ module.exports = {
     const userId = req.body.userId || undefined;
     const profilePictureUrl = req.body.profilePictureUrl || undefined;
 
-    // console.log(req.allParams());
-
     if (_.isUndefined(req.param("userId"))) {
       return res.status(401).send({ message: "ID user required." });
     }
@@ -196,7 +203,6 @@ module.exports = {
     });
 
     if (updatedUser) {
-      // console.log(updatedUser);
       return res.status(200).send({ message: "profile photo has changed " });
     } else {
       return res

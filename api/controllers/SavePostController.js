@@ -1,6 +1,6 @@
 module.exports = {
-  saved: async (req, res) => {
-    const userId = req.body.id;
+  posts: async (req, res) => {
+    const id = req.query.id;
     const limit = parseInt(req.query.limit || 20);
     const page = parseInt(req.query.page || 1);
 
@@ -11,7 +11,7 @@ module.exports = {
     }
 
     const postFound = await User.findOne({
-      where: { id: userId },
+      where: { id: id },
       select: ["id"]
     }).populate("savedId", {
       skip: (page - 1) * limit,
@@ -19,6 +19,17 @@ module.exports = {
       sort: "createdAt DESC"
     });
 
-    return res.send(postFound);
+    // return res.status(200).send(postFound);
+
+    const totalItem = await User.findOne({
+      where: { id: id }
+    })
+      .populate("savedId")
+      .then(user => {
+        if (user) return user.savedId.length;
+        else return 0;
+      });
+
+    return res.send({ data: postFound.savedId, totalItem: totalItem });
   }
 };
