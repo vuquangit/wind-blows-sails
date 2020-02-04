@@ -84,8 +84,13 @@ module.exports = {
 
             getRelationship().then(relationship => {
               return res.status(200).send({
-                post: { ...result, owner: { ...result.ownerId[0] } },
+                post: {
+                  ...result,
+                  owner: { ...result.ownerId[0] },
+                  relationship: relationship
+                },
                 owner: { ...result.ownerId[0] },
+                ownerId: [],
                 relationship: relationship
               });
             });

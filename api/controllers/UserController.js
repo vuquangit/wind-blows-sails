@@ -17,6 +17,7 @@ module.exports = {
     const postFound = await User.findOne({
       where: { id: userId },
       select: [
+        "id",
         "username",
         "isVerified",
         "fullName",
@@ -33,6 +34,7 @@ module.exports = {
         if (user) {
           if (user.postId.length > 0) {
             const {
+              id,
               username,
               isVerified,
               fullName,
@@ -41,6 +43,7 @@ module.exports = {
             } = user;
 
             const owner = {
+              id,
               username,
               isVerified,
               fullName,
@@ -133,7 +136,7 @@ module.exports = {
       // counts of user
       const counts = await UserService.counts(userFound.id);
 
-      if (viewerId !== undefined && viewerId !== userFound.id) {
+      if (viewerId !== undefined) {
         const relationship = await FollowService.relationship(
           userFound.id,
           viewerId
