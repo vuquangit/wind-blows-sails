@@ -46,57 +46,97 @@ module.exports = {
     if (!postId) {
       return res
         .status(401)
-        .json({ message: "Comments failed. User id request." });
+        .json({ message: "Comments failed. Post ID request." });
     }
 
-    await Posts.findOne({
-      where: { id: postId }
-      // select: ["id", "caption", "createdAt", "commentsDisabled"]
-    })
-      .populate("ownerId", {
-        select: [
-          "id",
-          "fullName",
-          "isNew",
-          "isPrivate",
-          "profilePictureUrl",
-          "username",
-          "isUnpublished",
-          "isVerified"
-        ]
-      })
-      .exec((err, result) => {
-        if (err) {
-          return res.serverError(err);
-        }
+    if (!viewerId) {
+      return res
+        .status(401)
+        .json({ message: "Comments failed. Post ID request." });
+    }
 
-        if (!result) {
-          return res.status(404).send({
-            message: "Post ID not found"
-          });
-        } else {
-          const ownerId = result.ownerId[0].id;
-          if (viewerId !== undefined) {
-            const getRelationship = async () => {
-              const data = await FollowService.relationship(ownerId, viewerId);
-              return data;
-            };
+    await PostService.post(postId, viewerId, (err, data) => {
+      if (err) return res.serverError(err);
 
-            getRelationship().then(relationship => {
-              return res.status(200).send({
-                post: {
-                  ...result,
-                  owner: { ...result.ownerId[0] },
-                  relationship: relationship
-                },
-                owner: { ...result.ownerId[0] },
-                ownerId: [],
-                relationship: relationship
-              });
-            });
-          } else return res.status(200).send(result);
-        }
-      });
+      return res.status(200).send(data);
+    });
+
+    // const fetchPost = async () => await PostService.post(postId, viewerId);
+    // Promise.all(fetchPost()).then(data => {
+    //   console.log("respone", data);
+    //   return res.status(200).send(data);
+    // });
+
+    // await Posts.findOne({
+    //   where: { id: postId }
+    // })
+    //   .populate("ownerId", {
+    //     select: [
+    //       "id",
+    //       "fullName",
+    //       "isNew",
+    //       "isPrivate",
+    //       "profilePictureUrl",
+    //       "username",
+    //       "isUnpublished",
+    //       "isVerified"
+    //     ]
+    //   })
+    //   .populate("likeId")
+    //   .populate("savedId", {
+    //     where: {
+    //       id: viewerId
+    //     }
+    //   })
+    //   .populate("commentsId")
+    //   .exec((err, result) => {
+    //     if (err) {
+    //       return res.serverError(err);
+    //     }
+
+    //     if (!result) {
+    //       return res.status(404).send({
+    //         message: "Post ID not found"
+    //       });
+    //     } else {
+    //       // get realationship
+    //       const ownerId = result.ownerId[0].id;
+    //       const getRelationship = async () =>
+    //         await FollowService.relationship(ownerId, viewerId);
+
+    //       // data response
+    //       getRelationship().then(relationship => {
+    //         const { post } = {
+    //           post: {
+    //             id: result.id,
+    //             caption: result.caption,
+    //             captionIsEdited: result.captionIsEdited,
+    //             commentsDisabled: result.commentsDisabled,
+    //             postAt: result.createdAt,
+    //             owner: result.ownerId[0],
+    //             sidecarChildren: result.sidecarChildren,
+
+    //             likedByViewer:
+    //               _.find(result.likeId, ["id", viewerId]) !== undefined,
+    //             savedByViewer: result.savedId.length > 0,
+    //             numLikes: result.likeId.length,
+    //             numComments: result.commentsId.length,
+
+    //             relationship: relationship
+    //           }
+    //         };
+
+    //         return res.status(200).send({
+    //           post,
+    //           owner: result.ownerId[0],
+    //           relationship,
+    //           likedByViewer:
+    //             _.find(result.likeId, ["id", viewerId]) !== undefined,
+    //           savedByViewer: result.savedId.length > 0
+    //         });
+    //       });
+    //     }
+    //   });
   },
   likePost: async (req, res) => {
     const userId = req.body.ownerId || undefined;
@@ -162,7 +202,6 @@ module.exports = {
   },
   addComments: async (req, res) => {
     const cmtParams = {
-      isAuthorVerified: req.body.isAuthorVerified || false,
       text: req.body.text || "",
       userId: req.body.userId || undefined,
       postId: req.body.postId || undefined
@@ -202,18 +241,17 @@ module.exports = {
           .status(401)
           .json({ message: "Add comments failed. Post ID is not valid." });
       } else {
-        await PostComments.create(cmtParams)
-          .then(() => {
-            return res.status(201).ok();
-          })
+        const dataCreated = await PostComments.create(cmtParams)
+          .fetch()
           .catch(err => {
             res.serverError(err);
           });
+        return res.status(201).send(dataCreated);
       }
     }
   },
   comments: async (req, res) => {
-    const postId = req.body.postId || undefined;
+    const postId = req.query.postId || undefined;
     const limit = parseInt(req.query.limit || 20);
     const page = parseInt(req.query.page || 1);
 
@@ -229,22 +267,34 @@ module.exports = {
         .json({ message: "Comments failed. User id request." });
     }
 
-    await Posts.findOne({
-      where: { id: postId },
-      select: ["id", "createdAt", "commentsDisabled"]
-    })
-      .populate("commentsId", {
-        skip: (page - 1) * limit,
-        limit: limit,
-        sort: "createdAt ASC"
-      })
-      .exec((err, result) => {
-        if (err) {
-          return res.serverError(err);
-        }
+    const commentsFound = await Posts.findOne({
+      where: { id: postId }
+    }).populate("commentsId", {
+      skip: (page - 1) * limit,
+      limit: limit,
+      sort: "createdAt DESC"
+    });
 
-        return res.status(200).send({ message: "comments added" });
+    const commentsTotalCount = await Posts.findOne({
+      where: { id: postId }
+    })
+      .populate("commentsId")
+      .then(user => {
+        if (user) return user.commentsId.length;
+        else return 0;
       });
+
+    const dataReponse = {
+      id: commentsFound.id,
+      captionAndTitle: commentsFound.caption,
+      captionIsEdited: commentsFound.captionIsEdited,
+      postedAt: commentsFound.createdAt,
+      commentsDisabled: commentsFound.commentsDisabled,
+      comments: commentsFound.commentsId,
+      commentsTotalCount
+    };
+
+    return res.status(200).send(dataReponse);
   },
   likeComments: async (req, res) => {
     const userId = req.body.userId || undefined;

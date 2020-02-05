@@ -1,6 +1,8 @@
 module.exports = {
   attributes: {
     id: { type: "number", columnName: "_id" },
+
+    //
     postId: {
       collection: "posts",
       via: "savedId"

@@ -62,7 +62,7 @@ module.exports.routes = {
   "POST /api/v1/post": "PostController.post",
   "POST /api/v1/post/add": "PostController.addPost",
   "POST /api/v1/post/like": "PostController.likePost",
-  "POST /api/v1/post/comments": "PostController.comments",
+  "GET /api/v1/post/comments": "PostController.comments",
   "POST /api/v1/post/comments/add": "PostController.addComments",
   "POST /api/v1/post/comments/like": "PostController.likeComments",
 

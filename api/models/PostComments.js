@@ -6,6 +6,11 @@ module.exports = {
     isAuthorVerified: { type: "boolean", defaultsTo: false },
     text: { type: "string", defaultsTo: "" },
 
+    //
+    childComments: {
+      collection: "postcomments"
+    },
+
     // Add a reference to PostCommentsLikes
     postCommentsLikesId: {
       collection: "postcommentslikes",

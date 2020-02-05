@@ -33,31 +33,57 @@ module.exports = {
       .then(user => {
         if (user) {
           if (user.postId.length > 0) {
-            const {
-              id,
-              username,
-              isVerified,
-              fullName,
-              isPrivate,
-              profilePictureUrl
-            } = user;
-
+            // add owner to item
             const owner = {
-              id,
-              username,
-              isVerified,
-              fullName,
-              isPrivate,
-              profilePictureUrl
+              id: user.id,
+              username: user.username,
+              isVerified: user.isVerified,
+              fullName: user.fullName,
+              isPrivate: user.isPrivate,
+              profilePictureUrl: user.profilePictureUrl
             };
 
             return user.postId.map((item, idx) => {
-              return { ...item, owner: owner };
+              // const getdata = async () =>
+              //   await Posts.findOne({ id: item.id })
+              //     .populate("likeId")
+              //     .populate("savedId", {
+              //       where: {
+              //         ownerId: userId
+              //       }
+              //     })
+              //     .populate("commentsId");
+
+              // const getdata = async () => {
+              //   const data = await PostService.post(
+              //     item.id,
+              //     userId,
+              //     (err, data) => {
+              //       return data;
+              //     }
+              //   );
+
+              //   console.log(data);
+              //   return data;
+              // };
+              // getdata().then(data => {
+              //   console.log(data);
+              // });
+
+              return {
+                ...item,
+                numLikes: 0,
+                numComments: 0,
+                likedByViewer: false,
+                savedByViewer: false,
+                owner: owner
+              };
             });
           }
         }
       });
 
+    // count total posts item
     const totalItem = await User.findOne({
       where: { id: userId }
     })
@@ -67,6 +93,7 @@ module.exports = {
         else return 0;
       });
 
+    // data response
     if (postFound !== undefined) {
       return res.send({ data: postFound, totalItem: totalItem });
     } else {

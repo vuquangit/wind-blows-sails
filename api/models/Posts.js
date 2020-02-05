@@ -21,7 +21,8 @@ module.exports = {
       via: "postId"
     },
     savedId: {
-      model: "savepost"
+      collection: "savepost",
+      via: "postId"
     }
   }
 };
