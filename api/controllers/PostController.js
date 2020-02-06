@@ -199,45 +199,17 @@ module.exports = {
         .json({ message: "Like post failed. User id request." });
     }
 
-    if (!postId) {
-      return res
-        .status(401)
-        .json({ message: "Like post failed. Post id request." });
-    }
-
-    const userValid = await User.findOne({
-      id: userId
-    }).catch(err => {
-      res.serverError(err);
+    const burnedPostLike = await PostLikes.destroyOne({
+      userId: userId,
+      postId: postId
     });
 
-    if (userValid === undefined) {
-      return res
-        .status(401)
-        .json({ message: "Like post failed. User ID is not valid." });
+    if (burnedPostLike) {
+      return res.status(200).json({ message: "Unliked this post" });
     } else {
-      const postValid = await Posts.findOne({
-        id: postId
+      return res.status(202).json({
+        message: `The database does not have a post id with postId: ${postId} and userId: ${userId}.`
       });
-
-      if (postValid === undefined) {
-        return res
-          .status(401)
-          .json({ message: "Like post failed. Post ID is not valid." });
-      } else {
-        const burnedPostLike = await PostLikes.destroyOne({
-          userId: userId,
-          postId: postId
-        });
-
-        if (burnedPostLike) {
-          return res.status(200).json({ message: "Unliked this post" });
-        } else {
-          return res.status(202).json({
-            message: `The database does not have a post id with postId: ${postId} and userId: ${userId}.`
-          });
-        }
-      }
     }
   },
 
@@ -272,8 +244,11 @@ module.exports = {
     })
       .populate("commentsId")
       .then(user => {
-        if (user) return user.commentsId.length;
-        else return 0;
+        if (user) {
+          return user.commentsId.length;
+        } else {
+          return 0;
+        }
       });
 
     const dataReponse = {
@@ -360,6 +335,87 @@ module.exports = {
     }
   },
 
+  // likes comments post
+  likesComments: async (req, res) => {
+    const commentsId = req.query.commentsId || undefined;
+    const viewerId = req.query.viewerId || undefined;
+    const limit = parseInt(req.query.limit || 20);
+    const page = parseInt(req.query.page || 1);
+
+    if (!commentsId) {
+      return res
+        .status(401)
+        .json({ message: "Like comments failed. Comments ID request." });
+    }
+
+    if (!viewerId) {
+      return res
+        .status(401)
+        .json({ message: "Like comments failed. Viewer ID request." });
+    }
+
+    const skip = (page - 1) * limit;
+    if (skip < 0) {
+      return res.send({
+        message: "Like comments failed. Page or limit number not correct."
+      });
+    }
+
+    const dataFound = await PostComments.findOne({ id: commentsId }).populate(
+      "postCommentsLikesId",
+      {
+        skip: skip,
+        limit: limit,
+        sort: "createdAt DESC"
+      }
+    );
+
+    const totalLikes = await PostComments.findOne({ id: commentsId }).populate(
+      "postCommentsLikesId"
+    );
+
+    if (dataFound === undefined) {
+      return res.status(401).send({
+        message: "Like comments failed. Data likes comments not found"
+      });
+    } else {
+      // fetch follower info
+      const fetchFollowers = async () => {
+        const fetchRelationship = dataFound.postCommentsLikesId.map(
+          async (item, idx) => {
+            const user = await User.findOne({
+              where: { id: item.ownerId },
+              select: [
+                "id",
+                "fullName",
+                "email",
+                "isPrivate",
+                "profilePictureUrl",
+                "username",
+                "isVerified"
+              ]
+            });
+
+            const relationship = await FollowService.relationship(
+              item.ownerId,
+              viewerId
+            );
+
+            return { user: user, relationship: relationship };
+          }
+        );
+
+        return Promise.all(fetchRelationship);
+      };
+
+      fetchFollowers().then(data => {
+        return res.status(200).send({
+          data: data,
+          totalLikes: totalLikes.postCommentsLikesId.length
+        });
+      });
+    }
+  },
   likeComments: async (req, res) => {
     const userId = req.body.userId || undefined;
     const commentsId = req.body.commentsId || undefined;
@@ -390,26 +446,61 @@ module.exports = {
       if (postValid === undefined) {
         return res.send({ message: "post comments id not valid" });
       } else {
-        const userLiked = await PostCommentsLikes.findOne({
-          userId: userId,
-          postCommentsId: commentsId
+        const userLiked = await PostComments.findOne({
+          id: commentsId
+        }).populate("postCommentsLikesId", {
+          where: { ownerId: userId }
         });
 
-        if (userLiked !== undefined) {
-          return res.send({ message: "user id has liked this post id" });
+        if (
+          userLiked !== undefined &&
+          userLiked.postCommentsLikesId.length > 0
+        ) {
+          return res
+            .status(202)
+            .send({ message: "user id has liked this post id" });
         } else {
           await PostCommentsLikes.create({
-            userId: userId,
+            ownerId: userId,
             postCommentsId: commentsId
           }).exec((err, data) => {
             if (err) {
               return res.serverError(err);
             }
 
-            return res.ok();
+            return res.status(201).send({ message: "Liked this comments" });
           });
         }
       }
+    }
+  },
+  unlikeComments: async (req, res) => {
+    const userId = req.body.userId || undefined;
+    const commentsId = req.body.commentsId || undefined;
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ message: "Unlike comments failed. userId request." });
+    }
+
+    if (!commentsId) {
+      return res
+        .status(401)
+        .json({ message: "Unlike comments failed. commentsId request." });
+    }
+
+    const burnedPostLike = await PostCommentsLikes.destroyOne({
+      ownerId: userId,
+      postCommentsId: commentsId
+    });
+
+    if (burnedPostLike) {
+      return res.status(200).json({ message: "Unliked this comments" });
+    } else {
+      return res.status(202).json({
+        message: `The database does not have a post id with comments Id: ${commentsId} and user Id: ${userId}.`
+      });
     }
   }
 };

@@ -9,7 +9,7 @@ module.exports = {
     },
 
     // Add a reference to User
-    userId: {
+    ownerId: {
       model: "user"
     }
   }

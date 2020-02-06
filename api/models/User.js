@@ -109,6 +109,12 @@ module.exports = {
     savedId: {
       collection: "savepost",
       via: "ownerId"
+    },
+
+    //  reference to Saved model
+    likeCommentsId: {
+      collection: "postcommentslikes",
+      via: "ownerId"
     }
   },
   customToJSON: function() {
@@ -130,8 +136,10 @@ module.exports = {
     });
   },
   validatePassword: function(password, user, cb) {
-    bcrypt.compare(password, user.password, function(err, match) {
-      if (err) cb(err, false);
+    bcrypt.compare(password, user.password, (err, match) => {
+      if (err) {
+        cb(err, false);
+      }
 
       if (match) {
         cb(null, true);
