@@ -61,13 +61,21 @@ module.exports.routes = {
   // Post controllers
   "POST /api/v1/post": "PostController.post",
   "POST /api/v1/post/add": "PostController.addPost",
-  "POST /api/v1/post/like": "PostController.likePost",
+
+  "GET /api/v1/post/likes": "PostController.likes",
+  "POST /api/v1/post/likes/like": "PostController.likePost",
+  "POST /api/v1/post/likes/unlike": "PostController.unlikePost",
+
   "GET /api/v1/post/comments": "PostController.comments",
   "POST /api/v1/post/comments/add": "PostController.addComments",
+  "POST /api/v1/post/comments/delete": "PostController.deleteComments",
+
   "POST /api/v1/post/comments/like": "PostController.likeComments",
 
   // Save post controllers
-  "GET /api/v1/save-post/posts": "SavePostController.posts",
+  "GET /api/v1/saved/posts": "SavePostController.posts",
+  "POST /api/v1/saved/add": "SavePostController.savePost",
+  "POST /api/v1/saved/delete": "SavePostController.deleteSavePost",
 
   // Image upload
   "POST /api/v1/upload-image/upload": "UploadImageController.uploadImage",

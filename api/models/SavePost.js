@@ -4,8 +4,7 @@ module.exports = {
 
     //
     postId: {
-      collection: "posts",
-      via: "savedId"
+      model: "posts"
     },
 
     // Add a reference to User model

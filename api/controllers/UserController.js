@@ -1,6 +1,7 @@
 module.exports = {
   posts: async (req, res) => {
-    const userId = req.query.id || undefined;
+    const ownerId = req.query.ownerId || undefined;
+    const viewerId = req.query.viewerId || undefined;
     const limit = parseInt(req.query.limit || 20);
     const page = parseInt(req.query.page || 1);
 
@@ -10,12 +11,16 @@ module.exports = {
       });
     }
 
-    if (!userId) {
+    if (!ownerId) {
       return res.status(401).send({ message: "User id is request" });
     }
 
-    const postFound = await User.findOne({
-      where: { id: userId },
+    if (!viewerId) {
+      return res.status(401).send({ message: "viewer id is request" });
+    }
+
+    await User.findOne({
+      where: { id: ownerId },
       select: [
         "id",
         "username",
@@ -31,74 +36,38 @@ module.exports = {
         sort: "createdAt DESC"
       })
       .then(user => {
-        if (user) {
+        if (user === undefined) {
+          return res.status(401).send({ message: "User id not found" });
+        } else {
           if (user.postId.length > 0) {
-            // add owner to item
-            const owner = {
-              id: user.id,
-              username: user.username,
-              isVerified: user.isVerified,
-              fullName: user.fullName,
-              isPrivate: user.isPrivate,
-              profilePictureUrl: user.profilePictureUrl
-            };
+            const fetchPost = async () =>
+              await Promise.all(
+                user.postId.map(
+                  async item => await PostService.post(item.id, viewerId)
+                )
+              );
 
-            return user.postId.map((item, idx) => {
-              // const getdata = async () =>
-              //   await Posts.findOne({ id: item.id })
-              //     .populate("likeId")
-              //     .populate("savedId", {
-              //       where: {
-              //         ownerId: userId
-              //       }
-              //     })
-              //     .populate("commentsId");
+            fetchPost().then(async data => {
+              // count total posts item
+              const totalItem = await User.findOne({
+                where: { id: ownerId }
+              })
+                .populate("postId")
+                .then(user => {
+                  if (user) return user.postId.length;
+                  else return 0;
+                });
 
-              // const getdata = async () => {
-              //   const data = await PostService.post(
-              //     item.id,
-              //     userId,
-              //     (err, data) => {
-              //       return data;
-              //     }
-              //   );
-
-              //   console.log(data);
-              //   return data;
-              // };
-              // getdata().then(data => {
-              //   console.log(data);
-              // });
-
-              return {
-                ...item,
-                numLikes: 0,
-                numComments: 0,
-                likedByViewer: false,
-                savedByViewer: false,
-                owner: owner
-              };
+              // data response
+              if (data !== undefined) {
+                return res.send({ data: data, totalItem: totalItem });
+              } else {
+                return res.status(401).send({ message: "User id not found" });
+              }
             });
           }
         }
       });
-
-    // count total posts item
-    const totalItem = await User.findOne({
-      where: { id: userId }
-    })
-      .populate("postId")
-      .then(user => {
-        if (user) return user.postId.length;
-        else return 0;
-      });
-
-    // data response
-    if (postFound !== undefined) {
-      return res.send({ data: postFound, totalItem: totalItem });
-    } else {
-      res.status(401).send({ message: "User id not found" });
-    }
   },
   userIdInfo: async (req, res) => {
     const userId = req.params.id || undefined;
