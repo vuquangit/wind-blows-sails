@@ -55,7 +55,7 @@ module.exports = {
 
     return res.status(200).send(data);
   },
-  detelePost: async (req, res) => {
+  deletePost: async (req, res) => {
     const postId = req.body.postId || undefined;
 
     if (!postId) {
