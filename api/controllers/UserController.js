@@ -27,7 +27,8 @@ module.exports = {
         "isVerified",
         "fullName",
         "isPrivate",
-        "profilePictureUrl"
+        "profilePictureUrl",
+        "profilePicturePublicId"
       ]
     })
       .populate("postId", {
@@ -86,7 +87,7 @@ module.exports = {
         "isNew",
         "isPrivate",
         "profilePictureUrl",
-        "profilePictureUrlHd",
+        "profilePicturePublicId",
         "username",
         "website",
         "isVerified"
@@ -120,7 +121,7 @@ module.exports = {
         "isNew",
         "isPrivate",
         "profilePictureUrl",
-        "profilePictureUrlHd",
+        "profilePicturePublicId",
         "username",
         "website",
         "isVerified",
@@ -188,17 +189,27 @@ module.exports = {
   changeProfilePicture: async (req, res) => {
     const userId = req.body.userId || undefined;
     const profilePictureUrl = req.body.profilePictureUrl || undefined;
+    const profilePicturePublicId = req.body.profilePicturePublicId || undefined;
 
     if (_.isUndefined(req.param("userId"))) {
-      return res.status(401).send({ message: "ID user required." });
+      return res.status(401).send({ message: "userId required." });
     }
 
     if (_.isUndefined(req.param("profilePictureUrl"))) {
-      return res.status(401).send({ message: "Profile picture URL required." });
+      return res.status(401).send({ message: "profilePictureUrl required." });
+    }
+
+    if (_.isUndefined(req.param("profilePicturePublicId"))) {
+      return res
+        .status(401)
+        .send({ message: "profilePicturePublicId required." });
     }
 
     var updatedUser = await User.updateOne({ id: userId }).set({
-      profilePictureUrl: profilePictureUrl ? profilePictureUrl : ""
+      profilePictureUrl: profilePictureUrl ? profilePictureUrl : "",
+      profilePicturePublicId: profilePicturePublicId
+        ? profilePicturePublicId
+        : ""
     });
 
     if (updatedUser) {

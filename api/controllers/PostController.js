@@ -44,20 +44,35 @@ module.exports = {
     const viewerId = req.body.viewerId || undefined;
 
     if (!postId) {
-      return res
-        .status(401)
-        .json({ message: "Comments failed. Post ID request." });
+      return res.status(401).json({ message: "post Id request." });
     }
 
     if (!viewerId) {
-      return res
-        .status(401)
-        .json({ message: "Comments failed. Post ID request." });
+      return res.status(401).json({ message: "viewer Id request." });
     }
 
     const data = await PostService.post(postId, viewerId);
 
     return res.status(200).send(data);
+  },
+  detelePost: async (req, res) => {
+    const postId = req.body.postId || undefined;
+
+    if (!postId) {
+      return res
+        .status(401)
+        .json({ message: "Delete failed. Post ID request." });
+    }
+
+    const burnedPost = await Posts.destroyOne({ id: postId });
+
+    if (burnedPost) {
+      return res.status(200).json({ message: "Deleted this post" });
+    } else {
+      return res.status(202).json({
+        message: `The database does not have a post id with postId: ${postId}`
+      });
+    }
   },
 
   // likes post
@@ -104,6 +119,7 @@ module.exports = {
               "email",
               "isPrivate",
               "profilePictureUrl",
+              "profilePicturePublicId",
               "username",
               "isVerified"
             ]
@@ -314,7 +330,7 @@ module.exports = {
     }
   },
   deleteComments: async (req, res) => {
-    const commentsId = req.body.id || "";
+    const commentsId = req.body.commentsId || undefined;
 
     if (!commentsId) {
       return res
@@ -391,6 +407,7 @@ module.exports = {
                 "email",
                 "isPrivate",
                 "profilePictureUrl",
+                "profilePicturePublicId",
                 "username",
                 "isVerified"
               ]

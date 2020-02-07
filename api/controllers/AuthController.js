@@ -9,17 +9,18 @@ var bcrypt = require("bcryptjs");
 var jwt = require("jsonwebtoken");
 var Emailaddresses = require("machinepack-emailaddresses");
 
+const cloudinary = require("cloudinary");
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
 module.exports = {
   login: async (req, res) => {
     const email = req.body.email || undefined;
     const username = req.body.username || undefined;
     const password = req.body.password || undefined;
-
-    // if (!(!!email && !!username)) {
-    //   return res.status(401).send({
-    //     message: "Email or username required"
-    //   });
-    // }
 
     if (!username) {
       if (!email) {
@@ -45,7 +46,7 @@ module.exports = {
       "isNew",
       "isPrivate",
       "profilePictureUrl",
-      "profilePictureUrlHd",
+      "profilePicturePublicId",
       "username",
       "website",
       "isVerified",
@@ -126,7 +127,6 @@ module.exports = {
       password: req.body.password || null,
       phoneNumber: req.body.phoneNumber || null,
       profilePictureUrl: req.body.profilePictureUrl || "",
-      profilePictureUrlHd: req.body.profilePictureUrlHd || "",
       emailVerified: false,
       isNew: true,
       isVerified: false
@@ -220,7 +220,7 @@ module.exports = {
         "isNew",
         "isPrivate",
         "profilePictureUrl",
-        "profilePictureUrlHd",
+        "profilePicturePublicId",
         "username",
         "website",
         "isVerified",
@@ -238,24 +238,45 @@ module.exports = {
         emailVerified: req.body.emailVerified || false,
         phoneNumber: req.body.phoneNumber || "",
         profilePictureUrl: req.body.profilePictureUrl || "",
-        profilePictureUrlHd: req.body.profilePictureUrlHd || "",
         isPrivate: false,
         website: "",
         isNew: true,
         isVerified: false
       };
 
-      newUser = await AuthService.createUser(userParams, false);
-      var token = jwt.sign({ user: newUser.id }, process.env.JWT_SECRET, {
-        expiresIn: 3600
-      });
-      // set a cookie on the client side that they can't modify unless they sign out (just for web apps)
-      res.cookie("sailsjwt", token, {
-        signed: true,
-        maxAge: 3600
-      });
+      // upload profile picture url to cloudinay
+      cloudinary.v2.uploader.upload(
+        userParams.profilePictureUrl,
+        {
+          folder: "the-wind-blows",
+          use_filename: true
+        },
+        (error, result) => {
+          if (!error) userParams.profilePicturePublicId = result.public_id;
 
-      return res.status(200).send({ user: newUser, token });
+          // create new user
+          const createUser = async () =>
+            await AuthService.createUser(userParams, false);
+
+          createUser().then(dataUser => {
+            // get token
+            var token = jwt.sign(
+              { user: dataUser.id },
+              process.env.JWT_SECRET,
+              {
+                expiresIn: 3600
+              }
+            );
+            // set a cookie on the client side that they can't modify unless they sign out (just for web apps)
+            res.cookie("sailsjwt", token, {
+              signed: true,
+              maxAge: 3600
+            });
+
+            return res.status(200).send({ user: dataUser, token });
+          });
+        }
+      );
     } else {
       // counts of user
       const counts = await UserService.counts(userFound.id);

@@ -61,6 +61,7 @@ module.exports.routes = {
   // Post controllers
   "POST /api/v1/post": "PostController.post",
   "POST /api/v1/post/add": "PostController.addPost",
+  "POST /api/v1/post/delete": "PostController.deletePost",
 
   "GET /api/v1/post/likes": "PostController.likes",
   "POST /api/v1/post/likes/like": "PostController.likePost",
@@ -71,8 +72,8 @@ module.exports.routes = {
   "POST /api/v1/post/comments/delete": "PostController.deleteComments",
 
   "GET /api/v1/post/comments/likes": "PostController.likesComments",
-  "POST /api/v1/post/comments/likes/add": "PostController.likeComments",
-  "POST /api/v1/post/comments/likes/delete": "PostController.unlikeComments",
+  "POST /api/v1/post/comments/likes/like": "PostController.likeComments",
+  "POST /api/v1/post/comments/likes/unlike": "PostController.unlikeComments",
 
   // Save post controllers
   "GET /api/v1/saved/posts": "SavePostController.posts",

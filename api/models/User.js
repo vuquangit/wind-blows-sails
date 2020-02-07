@@ -41,13 +41,13 @@ module.exports = {
       type: "string"
     },
 
-    profilePictureUrlHd: {
+    profilePicturePublicId: {
       type: "string"
     },
 
     username: {
       type: "string",
-      // required: true,
+      required: true,
       unique: true
     },
 

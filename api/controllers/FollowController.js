@@ -123,6 +123,7 @@ module.exports = {
         "isNew",
         "isPrivate",
         "profilePictureUrl",
+        "profilePicturePublicId",
         "username",
         "isVerified"
       ],
@@ -195,6 +196,7 @@ module.exports = {
         "isNew",
         "isPrivate",
         "profilePictureUrl",
+        "profilePicturePublicId",
         "username",
         "isVerified"
       ],
@@ -274,6 +276,7 @@ module.exports = {
         "isNew",
         "isPrivate",
         "profilePictureUrl",
+        "profilePicturePublicId",
         "username",
         "isVerified"
       ],
@@ -318,6 +321,7 @@ module.exports = {
         "isNew",
         "isPrivate",
         "profilePictureUrl",
+        "profilePicturePublicId",
         "username",
         "isVerified"
       ],

@@ -2,7 +2,6 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const cloudinary = require("cloudinary");
-
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -18,7 +17,7 @@ module.exports = {
     }
 
     const promises = values.map(image =>
-      cloudinary.uploader.upload(image.base64, {
+      cloudinary.v2.uploader.upload(image.base64, {
         folder: "the-wind-blows",
         use_filename: true
       })
