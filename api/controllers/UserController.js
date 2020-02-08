@@ -205,7 +205,7 @@ module.exports = {
         .send({ message: "profilePicturePublicId required." });
     }
 
-    var updatedUser = await User.updateOne({ id: userId }).set({
+    const updatedUser = await User.updateOne({ id: userId }).set({
       profilePictureUrl: profilePictureUrl ? profilePictureUrl : "",
       profilePicturePublicId: profilePicturePublicId
         ? profilePicturePublicId
@@ -218,6 +218,44 @@ module.exports = {
       return res
         .status(403)
         .send({ message: "The database does not contain this user id" });
+    }
+  },
+  deactivationUser: async (req, res) => {
+    const userId = req.params.userId || undefined;
+
+    if (_.isUndefined(req.param("userId"))) {
+      return res.status(401).send({ message: "userId required." });
+    }
+
+    const updatedUser = await User.updateOne({ id: userId }).set({
+      disabledAccount: true
+    });
+
+    if (updatedUser) {
+      return res.status(200).send({ message: "User has deactivation" });
+    } else {
+      return res.status(403).send({
+        message: `The database does not contain this user id: ${userId}`
+      });
+    }
+  },
+  reactivatingUser: async (req, res) => {
+    const userId = req.params.userId || undefined;
+
+    if (_.isUndefined(req.param("userId"))) {
+      return res.status(401).send({ message: "userId required." });
+    }
+
+    const updatedUser = await User.updateOne({ id: userId }).set({
+      disabledAccount: false
+    });
+
+    if (updatedUser) {
+      return res.status(200).send({ message: "User has reactive" });
+    } else {
+      return res.status(403).send({
+        message: `The database does not contain this user id: ${userId}`
+      });
     }
   }
 };

@@ -80,6 +80,11 @@ module.exports = {
       type: "string"
     },
 
+    disabledAccount: {
+      type: "boolean",
+      defaultsTo: false
+    },
+
     // Add a reference to Follower model
     following: {
       collection: "user",

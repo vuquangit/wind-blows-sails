@@ -55,6 +55,33 @@ module.exports = {
 
     return res.status(200).send(data);
   },
+  modifyPost: async (req, res) => {
+    const postId = req.body.postId || undefined;
+    const postParams = {
+      caption: req.body.caption || "",
+      commentsDisabled: req.body.commentsDisabled || false,
+      location: req.body.location || "",
+      captionIsEdited: true
+    };
+
+    if (!postId) {
+      return res.status(401).json({ message: "post Id request." });
+    }
+
+    if (!postParams.sidecarChildren) {
+      return res.status(401).json({ message: "image request." });
+    }
+
+    var updatedPost = await Posts.updateOne({ id: postId }).set(postParams);
+
+    if (updatedPost) {
+      return res.status(200).send(updatedPost);
+    } else {
+      return res.status(401).send({
+        message: `The database does not contain a post id: ${postId}`
+      });
+    }
+  },
   deletePost: async (req, res) => {
     const postId = req.body.postId || undefined;
 
@@ -64,6 +91,28 @@ module.exports = {
         .json({ message: "Delete failed. Post ID request." });
     }
 
+    // delete likes, comments, comments like ???
+    await PostLikes.destroy({
+      postId: postId
+    });
+
+    const commentsFound = await Posts.findOne({
+      where: { id: postId }
+    }).populate("commentsId");
+
+    if (commentsFound !== undefined && commentsFound.commentsId.length > 0) {
+      commentsFound.commentsId.map(async item => {
+        await PostComments.destroy({
+          id: item.id
+        });
+
+        await PostCommentsLikes.destroy({
+          postCommentsId: item.id
+        });
+      });
+    }
+
+    // finally delete post
     const burnedPost = await Posts.destroyOne({ id: postId });
 
     if (burnedPost) {
@@ -232,6 +281,7 @@ module.exports = {
   // comments post
   comments: async (req, res) => {
     const postId = req.query.postId || undefined;
+    const viewerId = req.query.viewerId || undefined;
     const limit = parseInt(req.query.limit || 20);
     const page = parseInt(req.query.page || 1);
 
@@ -267,17 +317,39 @@ module.exports = {
         }
       });
 
-    const dataReponse = {
-      id: commentsFound.id,
-      captionAndTitle: commentsFound.caption,
-      captionIsEdited: commentsFound.captionIsEdited,
-      postedAt: commentsFound.createdAt,
-      commentsDisabled: commentsFound.commentsDisabled,
-      comments: commentsFound.commentsId,
-      commentsTotalCount
+    const getDataComments = async () => {
+      const comments = commentsFound.commentsId.map(async item => {
+        const totalLikes = await PostComments.findOne({
+          id: item.id
+        }).populate("postCommentsLikesId");
+
+        return {
+          ...item,
+          likeCount: totalLikes.postCommentsLikesId.length,
+          likedByViewer:
+            _.find(
+              totalLikes.postCommentsLikesId,
+              o => o.ownerId === viewerId
+            ) !== undefined
+        };
+      });
+
+      return Promise.all(comments);
     };
 
-    return res.status(200).send(dataReponse);
+    getDataComments().then(comments => {
+      const dataReponse = {
+        id: commentsFound.id,
+        captionAndTitle: commentsFound.caption,
+        captionIsEdited: commentsFound.captionIsEdited,
+        postedAt: commentsFound.createdAt,
+        commentsDisabled: commentsFound.commentsDisabled,
+        comments: comments,
+        commentsTotalCount
+      };
+
+      return res.status(200).send(dataReponse);
+    });
   },
   addComments: async (req, res) => {
     const cmtParams = {

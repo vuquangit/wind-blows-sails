@@ -42,6 +42,8 @@ module.exports.routes = {
   "POST /api/v1/users/update": "UserController.updateInfoUser",
   "POST /api/v1/users/change-profile-photo":
     "UserController.changeProfilePicture",
+  "POST /api/v1/users/deactivation": "UserController.deactivationUser",
+  "POST /api/v1/users/reactivating": "UserController.reactivatingUser",
 
   // Follow controllers
   "POST /api/v1/follows/add": "FollowController.addFollow",
@@ -61,6 +63,7 @@ module.exports.routes = {
   // Post controllers
   "POST /api/v1/post": "PostController.post",
   "POST /api/v1/post/add": "PostController.addPost",
+  "POST /api/v1/post/modify": "PostController.modifyPost",
   "POST /api/v1/post/delete": "PostController.deletePost",
 
   "GET /api/v1/post/likes": "PostController.likes",
