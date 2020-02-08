@@ -55,8 +55,11 @@ module.exports = {
               })
                 .populate("postId")
                 .then(user => {
-                  if (user) return user.postId.length;
-                  else return 0;
+                  if (user) {
+                    return user.postId.length;
+                  } else {
+                    return 0;
+                  }
                 });
 
               // data response
@@ -66,8 +69,16 @@ module.exports = {
                 return res.status(401).send({ message: "User id not found" });
               }
             });
+          } else {
+            return res.send({ data: [], totalItem: 0 });
           }
         }
+      })
+      .catch({ name: "UsageError" }, err => {
+        return res.badRequest(err);
+      })
+      .catch(err => {
+        return res.serverError(err);
       });
   },
   userIdInfo: async (req, res) => {
@@ -139,9 +150,10 @@ module.exports = {
           viewerId
         );
 
-        return res
-          .status(200)
-          .send({ user: { ...userFound, counts }, relationship: relationship });
+        return res.status(200).send({
+          user: { ...userFound, counts },
+          relationship: relationship
+        });
       } else {
         return res.status(200).send({ user: { ...userFound, counts } });
       }
@@ -161,20 +173,11 @@ module.exports = {
       gender: req.body.gender || ""
     };
 
-    if (_.isUndefined(req.param("id"))) {
+    if (!userParams.id) {
       return res.status(401).send({ message: "ID user required." });
     }
 
-    // console.log(userParams);
-    // check username
-    const usernameFound = await User.findOne({
-      where: { username: userParams.username }
-    });
-    if (usernameFound !== undefined) {
-      return res.status(401).send({ message: "username already exists." });
-    }
-
-    var updatedUser = await User.updateOne({ id: userParams.id }).set(
+    const updatedUser = await User.updateOne({ id: userParams.id }).set(
       userParams
     );
 
