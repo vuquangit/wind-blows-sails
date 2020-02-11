@@ -2,7 +2,7 @@ module.exports = {
   attributes: {
     id: { type: "number", columnName: "_id" },
 
-    message: {
+    text: {
       type: "string"
     },
 
@@ -11,12 +11,23 @@ module.exports = {
       defaultsTo: false
     },
 
+    typeNotification: {
+      type: "number",
+      required: true
+    },
+
+    postId: {
+      model: "posts"
+    },
+
     senderId: {
-      model: "user"
+      model: "user",
+      required: true
     },
 
     receiverId: {
-      model: "user"
+      model: "user",
+      required: true
     }
   }
 };

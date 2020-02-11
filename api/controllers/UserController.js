@@ -260,5 +260,54 @@ module.exports = {
         message: `The database does not contain this user id: ${userId}`
       });
     }
+  },
+
+  saveNotificationToken: async (req, res) => {
+    const notiToken = req.body.token;
+    const userId = req.body.userId;
+
+    if (!userId)
+      return res.status(401).send({
+        message: "user id required"
+      });
+
+    if (!notiToken)
+      return res.status(401).send({
+        message: "notification token required"
+      });
+
+    const userUpdated = await User.updateOne({ id: userId }).set({
+      notificationToken: notiToken
+    });
+
+    if (userUpdated) {
+      return res.status(200).send(userUpdated);
+      // return res.status(200).send({message: "token is saved"})
+    } else {
+      return res.status(401).send({
+        message: `The database does not contain a user id: ${userId}`
+      });
+    }
+  },
+  deleteNotificationToken: async (req, res) => {
+    const userId = req.body.userId;
+
+    if (!userId)
+      return res.status(401).send({
+        message: "user id required"
+      });
+
+    const userUpdated = await User.updateOne({ id: userId }).set({
+      notificationToken: ""
+    });
+
+    if (userUpdated) {
+      return res.status(200).send(userUpdated);
+      // return res.status(200).send({message: "token is delete"})
+    } else {
+      return res.status(401).send({
+        message: `The database does not contain a user id: ${userId}`
+      });
+    }
   }
 };

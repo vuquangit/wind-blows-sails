@@ -221,7 +221,7 @@ module.exports = {
     } else {
       const postValid = await Posts.findOne({
         id: postId
-      });
+      }).populate("ownerId");
 
       if (postValid === undefined) {
         return res
@@ -244,7 +244,22 @@ module.exports = {
             userId: userId,
             postId: postId
           })
-            .then(() => {
+            .then(async () => {
+              const receiverId = postValid.ownerId[0].id;
+              const token = postValid.ownerId[0].notificationToken;
+              const title = "New post like";
+              const body = `Username @${userValid.username} has liked your post`;
+
+              await Notifications.create({
+                senderId: userId,
+                receiverId: receiverId,
+                text: body,
+                typeNotification: NotificationTypes.NEW_LIKE_POST,
+                postId: postId,
+                read: false
+              });
+              await FcmService.sendNotification(token, title, body);
+
               return res.status(201).ok();
             })
             .catch(err => {
@@ -383,9 +398,11 @@ module.exports = {
     } else {
       const postValid = await Posts.findOne({
         id: cmtParams.postId
-      }).catch(err => {
-        res.serverError(err);
-      });
+      })
+        .populate("ownerId")
+        .catch(err => {
+          res.serverError(err);
+        });
 
       if (postValid === undefined) {
         return res
@@ -397,6 +414,29 @@ module.exports = {
           .catch(err => {
             res.serverError(err);
           });
+
+        // create notification
+        const receiverId = _.get(postValid, "ownerId[0].id");
+        const token = _.get(postValid, "ownerId[0].notificationToken") || "";
+        const title = "New comments";
+        const body = `Username @${userValid.username} has commented: "${
+          cmtParams.text.length < 100
+            ? cmtParams.text
+            : `${cmtParams.text.slice(0, 100)}...`
+        }" in your post`;
+        const link = `/p/${cmtParams.postId}`;
+
+        await Notifications.create({
+          senderId: cmtParams.userId,
+          receiverId: receiverId,
+          text: cmtParams.text,
+          typeNotification: NotificationTypes.NEW_COMMENT,
+          postId: cmtParams.postId,
+          read: false
+        });
+
+        if (token) await FcmService.sendNotification(token, title, body, link);
+
         return res.status(201).send(dataCreated);
       }
     }

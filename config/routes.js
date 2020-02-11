@@ -44,6 +44,10 @@ module.exports.routes = {
     "UserController.changeProfilePicture",
   "POST /api/v1/users/deactivation": "UserController.deactivationUser",
   "POST /api/v1/users/reactivating": "UserController.reactivatingUser",
+  "POST /api/v1/users/notifications/add":
+    "UserController.saveNotificationToken",
+  "POST /api/v1/users/notifications/delete":
+    "UserController.deleteNotificationToken",
 
   // Follow controllers
   "POST /api/v1/follows/add": "FollowController.addFollow",
@@ -85,5 +89,10 @@ module.exports.routes = {
 
   // Image upload
   "POST /api/v1/upload-image/upload": "UploadImageController.uploadImage",
-  "POST /api/v1/upload-image/delete": "UploadImageController.deleteImage"
+  "POST /api/v1/upload-image/delete": "UploadImageController.deleteImage",
+
+  // Notifications
+  "GET /api/v1/users/notifications": "NotificationsController.notifications",
+  "POST /api/v1/users/notifications/unread":
+    "NotificationsController.totalUnread"
 };

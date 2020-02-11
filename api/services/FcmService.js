@@ -1,5 +1,9 @@
 const serviceAccount = require("./service-account.json");
 const admin = require("firebase-admin");
+// const axios = require("axios");
+// const dotenv = require("dotenv");
+// dotenv.config();
+// const WEB_PUSH_CERTIFICATES = process.env.GCM_WEB_PUSH_CERTIFICATES;
 
 /* initialise app */
 admin.initializeApp({
@@ -43,42 +47,28 @@ async function deleteAppInstanceToken(token) {
 // Sending User Notifications
 const messaging = admin.messaging();
 
-function buildCommonMessage(title, body) {
-  return {
-    notification: {
-      title: title,
-      body: body
-    }
-  };
-}
-
-/**
- * Builds message with platform specific options
- * Link: https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages
- */
-function buildPlatformMessage(token, title, body) {
-  const fcmMessage = buildCommonMessage(title, body);
-
-  const webpush = {
-    headers: {
-      TTL: "0"
-    },
-    notification: {
-      icon: "https://img.icons8.com/color/96/e74c3c/ireland.png"
-    },
-    fcm_options: {
-      link: "https://gnib-visa-app.rharshad.com"
-    }
-  };
-
-  fcmMessage["token"] = token;
-  fcmMessage["webpush"] = webpush;
-  return fcmMessage;
-}
-
-async function sendFcmMessage(fcmMessage) {
+async function sendNotification(token, title = "", body = "", link = "") {
   try {
-    await messaging.send(fcmMessage);
+    const message = {
+      notification: {
+        title: title,
+        body: body
+      },
+      webpush: {
+        headers: {
+          TTL: "0"
+        },
+        notification: {
+          icon: "https://img.icons8.com/color/96/e74c3c/ireland.png"
+        },
+        fcm_options: {
+          link: link
+        }
+      },
+      token: token
+    };
+
+    await messaging.send(message);
 
     console.log("Successfully sent message:");
   } catch (err) {
@@ -106,10 +96,9 @@ async function unsubscribeAppInstanceFromTopic(token, topic) {
 }
 
 module.exports = {
-  buildPlatformMessage,
   storeAppInstanceToken,
   deleteAppInstanceToken,
   subscribeAppInstanceToTopic,
   unsubscribeAppInstanceFromTopic,
-  sendFcmMessage
+  sendNotification
 };

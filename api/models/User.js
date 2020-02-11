@@ -85,41 +85,50 @@ module.exports = {
       defaultsTo: false
     },
 
-    // Add a reference to Follower model
+    notificationToken: {
+      type: "string"
+    },
+
+    //  Follower model
     following: {
       collection: "user",
       via: "follower",
       dominant: true
     },
 
-    // Add a reference to Following model
+    //  Following model
     follower: {
       collection: "user",
       via: "following"
     },
 
-    // Add a reference to Blocked model
+    //  Blocked model
     blockedId: {
       collection: "blocked",
       via: "ownerId"
     },
 
-    // Add a reference to Post model
+    //  Post model
     postId: {
       collection: "posts",
       via: "ownerId"
     },
 
-    // Add a reference to Saved model
+    //  Saved model
     savedId: {
       collection: "savepost",
       via: "ownerId"
     },
 
-    //  reference to Saved model
+    //  Comments Like model
     likeCommentsId: {
       collection: "postcommentslikes",
       via: "ownerId"
+    },
+
+    notifications: {
+      collection: "notifications",
+      via: "receiverId"
     }
   },
   customToJSON: function() {
