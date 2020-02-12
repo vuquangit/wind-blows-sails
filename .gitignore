@@ -132,4 +132,3 @@ lib-cov
 *.out
 *.pid
 .env
-service-account.json

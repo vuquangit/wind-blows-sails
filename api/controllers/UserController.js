@@ -263,8 +263,8 @@ module.exports = {
   },
 
   saveNotificationToken: async (req, res) => {
-    const notiToken = req.body.token;
-    const userId = req.body.userId;
+    const notiToken = req.body.token || undefined;
+    const userId = req.body.userId || undefined;
 
     if (!userId)
       return res.status(401).send({
