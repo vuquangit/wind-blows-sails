@@ -20,6 +20,10 @@ module.exports = {
       model: "posts"
     },
 
+    commentsId: {
+      model: "postComments"
+    },
+
     senderId: {
       model: "user",
       required: true

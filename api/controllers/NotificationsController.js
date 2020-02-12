@@ -51,10 +51,53 @@ module.exports = {
         where: { read: false }
       });
 
-      return res.status(200).send({
-        data: UserFound.notifications,
-        totalItem: totalItem.notifications.length,
-        totalUnread: totalUnread.notifications.length
+      const notifications = () => {
+        const notification = UserFound.notifications.map(async item => {
+          const user = await User.findOne({
+            where: { id: item.senderId },
+            select: [
+              "id",
+              "username",
+              "fullName",
+              "profilePictureUrl",
+              "profilePicturePublicId"
+            ]
+          });
+
+          const media = await Posts.findOne({
+            where: { id: item.postId },
+            select: ["id", "sidecarChildren"]
+          });
+
+          const relationship = await FollowService.relationship(
+            item.senderId,
+            item.receiverId
+          );
+
+          return {
+            id: item.id,
+            media: media,
+            text: item.text,
+            timestamp: item.createdAt,
+            typeNotification: item.typeNotification,
+            user: {
+              ...user,
+              relationship: relationship,
+              requestedByViewer: false
+            },
+            read: item.read
+          };
+        });
+
+        return Promise.all(notification);
+      };
+
+      notifications().then(notifications => {
+        return res.status(200).send({
+          data: notifications,
+          totalItem: totalItem.notifications.length,
+          totalUnread: totalUnread.notifications.length
+        });
       });
     }
   },
@@ -84,7 +127,44 @@ module.exports = {
         .send({ totalUnread: UserFound.notifications.length });
     }
   },
-  infoNotification: async (req, res) => {
-    return res.ok();
+  readNotification: async (req, res) => {
+    const id = req.body.id || undefined;
+    if (!id) return res.status(401).send({ message: "id request" });
+
+    const NotiUpdated = await Notifications.updateOne({ id: id })
+      .set({
+        read: true
+      })
+      .catch({ name: "UsageError" }, err => {
+        return res.badRequest(err);
+      })
+      .catch(err => {
+        return res.serverError(err);
+      });
+
+    if (NotiUpdated) return res.status(200).send(NotiUpdated);
+    else return res.status(401).send({ message: "id notification not found" });
+  },
+  readAllNotification: async (req, res) => {
+    const userId = req.body.userId || undefined;
+
+    if (!userId) return res.status(401).send({ message: "user id request" });
+
+    const NotiUpdated = await Notifications.update({
+      receiverId: userId
+    })
+      .set({
+        read: true
+      })
+      .fetch()
+      .catch({ name: "UsageError" }, err => {
+        return res.badRequest(err);
+      })
+      .catch(err => {
+        return res.serverError(err);
+      });
+
+    if (NotiUpdated) return res.status(200).send(NotiUpdated);
+    else return res.status(401).send({ message: "user id not found" });
   }
 };

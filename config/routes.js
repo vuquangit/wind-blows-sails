@@ -94,5 +94,9 @@ module.exports.routes = {
   // Notifications
   "GET /api/v1/users/notifications": "NotificationsController.notifications",
   "POST /api/v1/users/notifications/unread":
-    "NotificationsController.totalUnread"
+    "NotificationsController.totalUnread",
+  "POST /api/v1/users/notifications/read":
+    "NotificationsController.readNotification",
+  "POST /api/v1/users/notifications/read-all":
+    "NotificationsController.readAllNotification"
 };

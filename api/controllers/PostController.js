@@ -245,10 +245,11 @@ module.exports = {
             postId: postId
           })
             .then(async () => {
+              // send notifications
               const receiverId = postValid.ownerId[0].id;
               const token = postValid.ownerId[0].notificationToken;
-              const title = "New post like";
-              const body = `Username @${userValid.username} has liked your post`;
+              const title = "New post likes";
+              const body = `Username @${userValid.username} liked your photo`;
 
               await Notifications.create({
                 senderId: userId,
@@ -260,6 +261,7 @@ module.exports = {
               });
               await FcmService.sendNotification(token, title, body);
 
+              // response
               return res.status(201).ok();
             })
             .catch(err => {
@@ -409,7 +411,7 @@ module.exports = {
           .status(401)
           .json({ message: "Add comments failed. Post ID is not valid." });
       } else {
-        const dataCreated = await PostComments.create(cmtParams)
+        const postCommentsCreated = await PostComments.create(cmtParams)
           .fetch()
           .catch(err => {
             res.serverError(err);
@@ -432,12 +434,14 @@ module.exports = {
           text: cmtParams.text,
           typeNotification: NotificationTypes.NEW_COMMENT,
           postId: cmtParams.postId,
+          commentsId: postCommentsCreated.id,
           read: false
         });
 
         if (token) await FcmService.sendNotification(token, title, body, link);
 
-        return res.status(201).send(dataCreated);
+        // response data
+        return res.status(201).send(postCommentsCreated);
       }
     }
   },
@@ -549,17 +553,15 @@ module.exports = {
     const userId = req.body.userId || undefined;
     const commentsId = req.body.commentsId || undefined;
 
-    if (!userId) {
+    if (!userId)
       return res.send({
         message: "user id request"
       });
-    }
 
-    if (!commentsId) {
+    if (!commentsId)
       return res.send({
         message: "post comments id request"
       });
-    }
 
     const userValid = await User.findOne({
       id: userId
@@ -575,30 +577,62 @@ module.exports = {
       if (postValid === undefined) {
         return res.send({ message: "post comments id not valid" });
       } else {
-        const userLiked = await PostComments.findOne({
+        const postCommentsFound = await PostComments.findOne({
           id: commentsId
-        }).populate("postCommentsLikesId", {
-          where: { ownerId: userId }
-        });
+        })
+          .populate("postCommentsLikesId", {
+            where: { ownerId: userId }
+          })
+          .populate("userId")
+          .populate("postId");
 
         if (
-          userLiked !== undefined &&
-          userLiked.postCommentsLikesId.length > 0
+          postCommentsFound !== undefined &&
+          postCommentsFound.postCommentsLikesId.length > 0
         ) {
           return res
             .status(202)
             .send({ message: "user id has liked this post id" });
         } else {
-          await PostCommentsLikes.create({
+          const commentsLikeCreated = await PostCommentsLikes.create({
             ownerId: userId,
             postCommentsId: commentsId
-          }).exec((err, data) => {
-            if (err) {
-              return res.serverError(err);
-            }
-
-            return res.status(201).send({ message: "Liked this comments" });
+          }).catch(err => {
+            res.serverError(err);
           });
+
+          // create notification
+          console.log(userId === _.get(postCommentsFound, "userId.id"));
+
+          if (userId !== _.get(postCommentsFound, "userId.id")) {
+            const token =
+              _.get(postCommentsFound, "userId.notificationToken") || "";
+            const title = "New like comments";
+            const body = `Username @${
+              userValid.username
+            } liked your comments: "${
+              postCommentsFound.text.length < 100
+                ? postCommentsFound.text
+                : `${postCommentsFound.text.slice(0, 100)}...`
+            }" in your post`;
+            const postId = _.get(postCommentsFound, "postId.id");
+            const link = `/p/${postId}`;
+
+            await Notifications.create({
+              senderId: userId,
+              receiverId: _.get(postCommentsFound, "userId.id"),
+              text: postCommentsFound.text,
+              typeNotification: NotificationTypes.NEW_LIKE_COMMENT,
+              postId,
+              commentsId: commentsId,
+              read: false
+            });
+
+            if (token)
+              await FcmService.sendNotification(token, title, body, link);
+          }
+
+          return res.status(200).send({ message: "Liked this comments" });
         }
       }
     }

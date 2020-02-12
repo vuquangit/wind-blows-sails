@@ -4,28 +4,25 @@ module.exports = {
     const userId = req.body ? req.body.userId : undefined;
 
     //#region Check valid
-    if (!viewerId || !userId) {
+    if (!viewerId || !userId)
       return res.status(401).send({
         message: "id or id following request"
       });
-    }
 
-    if (viewerId === userId) {
+    if (viewerId === userId)
       return res.status(401).send({
         message: "id and id following is duplicate"
       });
-    }
 
     // check id owner
     const userOwner = await User.findOne({
       where: { id: viewerId }
     });
 
-    if (userOwner === undefined) {
+    if (userOwner === undefined)
       return res.status(401).send({
         message: "owner id not found"
       });
-    }
 
     // check id follow
     const userFollowing = await User.findOne({
@@ -49,23 +46,37 @@ module.exports = {
       return res.status(401).send({ message: "owner id adready following" });
     else await User.addToCollection(viewerId, "following", userId);
 
+    // create notification
+    const token = _.get(userFollowing, "notificationToken") || "";
+    const title = "New following";
+    const body = `Username @${userFollowing.username} has  following you`;
+    const link = `/${userOwner.username}`;
+
+    await Notifications.create({
+      senderId: viewerId,
+      receiverId: userId,
+      typeNotification: NotificationTypes.NEW_FOLLOW,
+      read: false
+    });
+
+    if (token) await FcmService.sendNotification(token, title, body, link);
+
+    // response
     return res.status(200).send("You have already followed this account");
   },
   unfollow: async (req, res) => {
     const viewerId = req.body.viewerId;
     const idUnfollow = req.body.userId;
 
-    if (!viewerId || !idUnfollow) {
+    if (!viewerId || !idUnfollow)
       return res.status(401).send({
         message: "owner id or following id is request"
       });
-    }
 
-    if (viewerId === idUnfollow) {
+    if (viewerId === idUnfollow)
       return res.status(401).send({
         message: "owner ID and following ID is duplicate"
       });
-    }
 
     // check id owner
     const userFound = await User.find({
@@ -83,14 +94,21 @@ module.exports = {
       where: { id: idUnfollow }
     });
 
-    if (userFollowing.length === 0) {
+    if (userFollowing.length === 0)
       return res.status(401).send({
         message: "user id will following not found"
       });
-    }
 
     await User.removeFromCollection(viewerId, "following", idUnfollow);
 
+    // delete notification
+    await Notifications.destroy({
+      senderId: viewerId,
+      receiverId: idUnfollow,
+      typeNotification: NotificationTypes.NEW_FOLLOW
+    });
+
+    // reponse
     return res.status(200).send("You have unfollowed this account");
   },
   following: async (req, res) => {
