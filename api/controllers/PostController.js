@@ -459,6 +459,12 @@ module.exports = {
     });
 
     if (burnedPostComments) {
+      // delete noti add comments
+      await Notifications.destroy({
+        typeNotification: NotificationTypes.NEW_COMMENT,
+        commentsId: commentsId
+      });
+
       return res.status(200).json({ message: "Deleted this comment" });
     } else {
       return res.status(202).json({

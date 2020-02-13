@@ -18,8 +18,8 @@ const serviceAccount = {
   type: process.env.FIREBASE_TYPE,
   project_id: process.env.FIREBASE_PROJECT_ID,
   private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-  // private_key: process.env.FIREBASE_PRIVATE_KEY, // for development
-  private_key: JSON.parse(process.env.FIREBASE_PRIVATE_KEY), // for deploy
+  private_key: process.env.FIREBASE_PRIVATE_KEY, // for development
+  // private_key: JSON.parse(process.env.FIREBASE_PRIVATE_KEY), // for deploy
   client_email: process.env.FIREBASE_CLIENT_EMAIL,
   client_id: process.env.FIREBASE_CLIENT_ID,
   auth_uri: process.env.FIREBASE_AUTH_URL,
@@ -81,7 +81,8 @@ async function sendNotification(token, title = "", body = "", link = "") {
           TTL: "0"
         },
         notification: {
-          icon: "https://img.icons8.com/color/96/e74c3c/ireland.png"
+          icon:
+            "https://res.cloudinary.com/dnzsa2z7b/image/upload/v1581590799/the-wind-blows/icon/favicon_si4agl.ico"
         },
         fcm_options: {
           link: link
