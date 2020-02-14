@@ -151,20 +151,21 @@ module.exports = {
     Emailaddresses.validate({
       string: req.param("email")
     }).exec({
-      error: function(err) {
+      error: err => {
         return res.serverError(err);
       },
-      invalid: function() {
+      invalid: () => {
         return res
           .status(401)
           .send({ message: "Doesn't look like an email address." });
       },
-      success: async function() {
+      success: async () => {
         // check email
-        const emailFound = await User.findOne({
+        const userFound = await User.findOne({
           where: { email: userParams.email }
         });
-        if (emailFound !== undefined) {
+
+        if (!userFound) {
           return res.status(401).send({ message: "Email already exists." });
         }
 
@@ -172,7 +173,8 @@ module.exports = {
         const usernameFound = await User.findOne({
           where: { username: userParams.username }
         });
-        if (usernameFound !== undefined) {
+
+        if (!usernameFound) {
           return res.status(401).send({ message: "username already exists." });
         }
 
@@ -256,7 +258,9 @@ module.exports = {
           use_filename: true
         },
         (error, result) => {
-          if (!error) userParams.profilePicturePublicId = result.public_id;
+          if (!error) {
+            userParams.profilePicturePublicId = result.public_id;
+          }
 
           // create new user
           const createUser = async () =>

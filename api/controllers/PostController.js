@@ -5,16 +5,19 @@ module.exports = {
     const limit = parseInt(req.query.limit || 20);
     const page = parseInt(req.query.page || 1);
 
-    if ((page - 1) * limit < 0)
+    if ((page - 1) * limit < 0) {
       return res.send({
         message: "page or limit not correct"
       });
+    }
 
-    if (!ownerId)
+    if (!ownerId) {
       return res.status(401).send({ message: "owner id is request" });
+    }
 
-    if (!viewerId)
+    if (!viewerId) {
       return res.status(401).send({ message: "viewer id is request" });
+    }
 
     await User.findOne({
       where: { id: ownerId },
@@ -83,12 +86,15 @@ module.exports = {
     const limit = parseInt(req.query.limit || 20);
     const page = parseInt(req.query.page || 1);
 
-    if ((page - 1) * limit < 0)
+    if ((page - 1) * limit < 0) {
       return res.send({
         message: "page or limit not correct"
       });
+    }
 
-    if (!userId) return res.status(401).send({ message: "User id is request" });
+    if (!userId) {
+      return res.status(401).send({ message: "User id is request" });
+    }
 
     const userFound = await User.findOne({ id: userId })
       .populate("following", {
@@ -111,14 +117,14 @@ module.exports = {
             return x;
           }, Promise.resolve([]));
 
-        const compare = (a, b) => {
+        const compareDesc = (a, b) => {
           const x = a.createdAt;
           const y = b.createdAt;
 
           let comparison = 0;
-          if (x > y) {
+          if (x < y) {
             comparison = 1;
-          } else if (x < y) {
+          } else if (x > y) {
             comparison = -1;
           }
           return comparison;
@@ -131,7 +137,7 @@ module.exports = {
 
         getPosts().then(async data => {
           const postsData = await [...data, ...userFound.postId];
-          const dataSorted = await postsData.sort(compare);
+          const dataSorted = await postsData.sort(compareDesc);
           const dataPagination = await dataSorted.slice(
             (page - 1) * limit,
             (page - 1) * limit + limit
@@ -146,7 +152,9 @@ module.exports = {
       } else {
         res.status(200).send([]);
       }
-    } else res.status(401).send({ message: "user id not found" });
+    } else {
+      res.status(401).send({ message: "user id not found" });
+    }
   },
   post: async (req, res) => {
     const postId = req.body.postId || undefined;
@@ -161,8 +169,11 @@ module.exports = {
     }
 
     const data = await PostService.post(postId, viewerId);
-    if (data) return res.status(200).send(data);
-    else return res.status(404).send({ message: "post id not found" });
+    if (data) {
+      return res.status(200).send(data);
+    } else {
+      return res.status(404).send({ message: "post id not found" });
+    }
   },
 
   addPost: async (req, res) => {
@@ -354,15 +365,17 @@ module.exports = {
     const userId = req.body.userId || undefined;
     const postId = req.body.postId || undefined;
 
-    if (!userId)
+    if (!userId) {
       return res
         .status(401)
         .json({ message: "Like post failed. User id request." });
+    }
 
-    if (!postId)
+    if (!postId) {
       return res
         .status(401)
         .json({ message: "Like post failed. Post id request." });
+    }
 
     const userValid = await User.findOne({
       id: userId
@@ -614,8 +627,9 @@ module.exports = {
             read: false
           });
 
-          if (token)
+          if (token) {
             await FcmService.sendNotification(token, title, body, link);
+          }
         }
 
         // response data
@@ -737,15 +751,17 @@ module.exports = {
     const userId = req.body.userId || undefined;
     const commentsId = req.body.commentsId || undefined;
 
-    if (!userId)
+    if (!userId) {
       return res.send({
         message: "user id request"
       });
+    }
 
-    if (!commentsId)
+    if (!commentsId) {
       return res.send({
         message: "post comments id request"
       });
+    }
 
     const userValid = await User.findOne({
       id: userId
@@ -810,8 +826,9 @@ module.exports = {
               read: false
             });
 
-            if (token)
+            if (token) {
               await FcmService.sendNotification(token, title, body, link);
+            }
           }
 
           return res.status(200).send({ message: "Liked this comments" });
@@ -823,15 +840,17 @@ module.exports = {
     const userId = req.body.userId || undefined;
     const commentsId = req.body.commentsId || undefined;
 
-    if (!userId)
+    if (!userId) {
       return res
         .status(401)
         .json({ message: "Unlike comments failed. userId request." });
+    }
 
-    if (!commentsId)
+    if (!commentsId) {
       return res
         .status(401)
         .json({ message: "Unlike comments failed. commentsId request." });
+    }
 
     const burnedPostLike = await PostCommentsLikes.destroyOne({
       ownerId: userId,
