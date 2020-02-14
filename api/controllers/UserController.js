@@ -1,86 +1,6 @@
+var bcrypt = require("bcryptjs");
+
 module.exports = {
-  posts: async (req, res) => {
-    const ownerId = req.query.ownerId || undefined;
-    const viewerId = req.query.viewerId || undefined;
-    const limit = parseInt(req.query.limit || 20);
-    const page = parseInt(req.query.page || 1);
-
-    if ((page - 1) * limit < 0) {
-      return res.send({
-        message: "page or limit not correct"
-      });
-    }
-
-    if (!ownerId) {
-      return res.status(401).send({ message: "User id is request" });
-    }
-
-    if (!viewerId) {
-      return res.status(401).send({ message: "viewer id is request" });
-    }
-
-    await User.findOne({
-      where: { id: ownerId },
-      select: [
-        "id",
-        "username",
-        "isVerified",
-        "fullName",
-        "isPrivate",
-        "profilePictureUrl",
-        "profilePicturePublicId"
-      ]
-    })
-      .populate("postId", {
-        skip: (page - 1) * limit,
-        limit: limit,
-        sort: "createdAt DESC"
-      })
-      .then(user => {
-        if (user === undefined) {
-          return res.status(401).send({ message: "User id not found" });
-        } else {
-          if (user.postId.length > 0) {
-            const fetchPost = async () =>
-              await Promise.all(
-                user.postId.map(
-                  async item => await PostService.post(item.id, viewerId)
-                )
-              );
-
-            fetchPost().then(async data => {
-              // count total posts item
-              const totalItem = await User.findOne({
-                where: { id: ownerId }
-              })
-                .populate("postId")
-                .then(user => {
-                  if (user) {
-                    return user.postId.length;
-                  } else {
-                    return 0;
-                  }
-                });
-
-              // data response
-              if (data !== undefined) {
-                return res.send({ data: data, totalItem: totalItem });
-              } else {
-                return res.status(401).send({ message: "User id not found" });
-              }
-            });
-          } else {
-            return res.send({ data: [], totalItem: 0 });
-          }
-        }
-      })
-      .catch({ name: "UsageError" }, err => {
-        return res.badRequest(err);
-      })
-      .catch(err => {
-        return res.serverError(err);
-      });
-  },
   userIdInfo: async (req, res) => {
     const userId = req.params.id || undefined;
 
@@ -173,9 +93,8 @@ module.exports = {
       gender: req.body.gender || ""
     };
 
-    if (!userParams.id) {
+    if (!userParams.id)
       return res.status(401).send({ message: "ID user required." });
-    }
 
     const updatedUser = await User.updateOne({ id: userParams.id }).set(
       userParams
@@ -188,6 +107,47 @@ module.exports = {
         .status(403)
         .send({ message: "The database does not contain a user id" });
     }
+  },
+  changePassword: async (req, res) => {
+    const userId = req.body.userId || undefined;
+    const oldPassword = req.body.oldPassword || undefined;
+    const newPassword = req.body.newPassword || undefined;
+
+    if (!userId) return res.status(401).send({ message: "ID user required." });
+
+    if (!oldPassword)
+      return res.status(401).send({ message: "Old password required." });
+
+    if (!newPassword)
+      return res.status(401).send({ message: "New password required." });
+
+    // check old password correct
+    userFound = await User.findOne({
+      id: userId
+    });
+
+    if (!userFound)
+      return res
+        .status(403)
+        .send({ message: "The database does not contain a user id" });
+
+    // have a password
+    if (userFound.isAuthenticateLogin) {
+      const passValid = await bcrypt.compare(oldPassword, userFound.password);
+
+      if (!passValid)
+        return res.status(401).send({
+          message:
+            "Sorry, your password was incorrect. Please double-check your password."
+        });
+    }
+
+    // change password
+    await User.updateOne({ id: userId }).set({
+      password: newPassword,
+      isAuthenticateLogin: false
+    });
+    return res.status(200).send({ message: "Your password changed" });
   },
   changeProfilePicture: async (req, res) => {
     const userId = req.body.userId || undefined;

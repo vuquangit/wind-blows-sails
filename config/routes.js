@@ -38,8 +38,9 @@ module.exports.routes = {
   // User controllers
   "POST /api/v1/username/": "UserController.userNameInfo",
   "GET /api/v1/user/:id": "UserController.userIdInfo",
-  "GET /api/v1/posts": "UserController.posts",
+
   "POST /api/v1/users/update": "UserController.updateInfoUser",
+  "POST /api/v1/users/change-password": "UserController.changePassword",
   "POST /api/v1/users/change-profile-photo":
     "UserController.changeProfilePicture",
   "POST /api/v1/users/deactivation": "UserController.deactivationUser",
@@ -65,6 +66,8 @@ module.exports.routes = {
   "POST /api/v1/blocked": "BlockedController.blocked",
 
   // Post controllers
+  "GET /api/v1/posts": "PostController.posts",
+  "GET /api/v1/posts-following": "PostController.postsFollowing",
   "POST /api/v1/post": "PostController.post",
   "POST /api/v1/post/add": "PostController.addPost",
   "POST /api/v1/post/modify": "PostController.modifyPost",

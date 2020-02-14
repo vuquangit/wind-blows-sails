@@ -52,7 +52,8 @@ module.exports = {
       "isVerified",
       "password",
       "isUnpublished",
-      "phoneNumber"
+      "phoneNumber",
+      "isAuthenticateLogin"
     ];
 
     if (email !== undefined) {
@@ -129,7 +130,8 @@ module.exports = {
       profilePictureUrl: req.body.profilePictureUrl || "",
       emailVerified: false,
       isNew: true,
-      isVerified: false
+      isVerified: false,
+      isAuthenticateLogin: false
     };
 
     if (_.isUndefined(req.param("email"))) {
@@ -225,7 +227,8 @@ module.exports = {
         "website",
         "isVerified",
         "isUnpublished",
-        "phoneNumber"
+        "phoneNumber",
+        "isAuthenticateLogin"
       ]
     }).catch(err => res.serverError(err));
 
@@ -241,7 +244,8 @@ module.exports = {
         isPrivate: false,
         website: "",
         isNew: true,
-        isVerified: false
+        isVerified: false,
+        isAuthenticateLogin: true // important
       };
 
       // upload profile picture url to cloudinay
@@ -291,7 +295,10 @@ module.exports = {
         maxAge: 3600
       });
 
-      return res.status(200).send({ user: { ...userFound, counts }, token });
+      return res.status(200).send({
+        user: { ...userFound, counts, isAuthenticateLogin: true },
+        token
+      });
     }
   },
 

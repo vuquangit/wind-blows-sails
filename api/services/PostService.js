@@ -24,7 +24,7 @@ module.exports = {
       .populate("commentsId");
 
     if (postFound === undefined) {
-      return { message: "Post ID not found" };
+      return {};
     } else {
       // get realationship
       const ownerId = postFound.ownerId[0].id;

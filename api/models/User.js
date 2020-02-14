@@ -89,6 +89,11 @@ module.exports = {
       type: "string"
     },
 
+    isAuthenticateLogin: {
+      type: "boolean",
+      defaultsTo: false
+    },
+
     //  Follower model
     following: {
       collection: "user",
