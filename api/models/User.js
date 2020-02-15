@@ -94,6 +94,14 @@ module.exports = {
       defaultsTo: false
     },
 
+    resetPasswordToken: {
+      type: "string"
+    },
+
+    resetPasswordExpires: {
+      type: "number"
+    },
+
     //  Follower model
     following: {
       collection: "user",

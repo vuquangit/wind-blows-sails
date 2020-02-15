@@ -1,4 +1,7 @@
 var bcrypt = require("bcryptjs");
+var jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 
 module.exports = {
   userIdInfo: async (req, res) => {
@@ -93,8 +96,9 @@ module.exports = {
       gender: req.body.gender || ""
     };
 
-    if (!userParams.id)
+    if (!userParams.id) {
       return res.status(401).send({ message: "ID user required." });
+    }
 
     const updatedUser = await User.updateOne({ id: userParams.id }).set(
       userParams
@@ -112,40 +116,49 @@ module.exports = {
     const userId = req.body.userId || undefined;
     const oldPassword = req.body.oldPassword || undefined;
     const newPassword = req.body.newPassword || undefined;
+    const isConfirmOldPassword = req.body.isConfirmOldPassword || undefined;
 
-    if (!userId) return res.status(401).send({ message: "ID user required." });
+    if (!userId) {
+      return res.status(400).send({ message: "ID user required." });
+    }
 
-    if (!newPassword)
+    if (!newPassword) {
       return res.status(401).send({ message: "Password required." });
+    }
 
     // check old password correct
     userFound = await User.findOne({
       id: userId
     });
 
-    if (!userFound)
+    if (!userFound) {
       return res
         .status(403)
         .send({ message: "The database does not contain a user id" });
+    }
 
     // have a password
-    if (!userFound.isAuthenticateLogin) {
-      if (!oldPassword)
+    if (isConfirmOldPassword) {
+      if (!oldPassword) {
         return res.status(401).send({ message: "Old password required." });
+      }
 
       const passValid = await bcrypt.compare(oldPassword, userFound.password);
 
-      if (!passValid)
+      if (!passValid) {
         return res.status(401).send({
           message:
             "Sorry, your password was incorrect. Please double-check your password."
         });
+      }
     }
 
     // change password
     await User.updateOne({ id: userId }).set({
       password: newPassword,
-      isAuthenticateLogin: false
+      isAuthenticateLogin: false,
+      resetPasswordToken: "",
+      resetPasswordExpires: Date.now() - 3600000
     });
 
     return res.status(200).send({ message: "Your password changed" });
@@ -184,6 +197,140 @@ module.exports = {
         .send({ message: "The database does not contain this user id" });
     }
   },
+
+  forgotPassword: async (req, res) => {
+    const email = req.body.email || undefined;
+    const localhost = req.body.localhost || undefined;
+
+    if (!email) {
+      return res.status(400).send({ message: "email required." });
+    }
+    if (!localhost) {
+      return res.status(400).send({ message: "localhost URL required." });
+    }
+
+    const userFound = await User.findOne({ email: email });
+    if (!userFound) {
+      return res.status(403).send({ message: "email not in database" });
+    } else {
+      // const token = jwt.sign({ user: user.id }, process.env.JWT_SECRET, {
+      //   expiresIn: 3600
+      // });
+      const token = crypto.randomBytes(50).toString("hex");
+
+      await User.updateOne({ email: email }).set({
+        resetPasswordToken: token,
+        resetPasswordExpires: Date.now() + 3600000
+      });
+
+      const mailServer = process.env.MAIL_SERVER;
+      const mailPass = process.env.MAIL_PASS;
+
+      const transporter = await nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: mailServer,
+          pass: mailPass
+        }
+      });
+
+      const mailOptions = {
+        from: `The Wind Blows <${mailServer}>`,
+        to: email,
+        subject: "Link To Reset Password",
+        html: `<p style="font-size: 16px;">Please click to reset password</p>
+        <br />
+        ${localhost}${
+          _.endsWith(localhost, "/") ? "" : "/"
+        }accounts/password/reset/${token}<br /><br />
+        `
+      };
+
+      // returning result
+      transporter.sendMail(mailOptions, (erro, response) => {
+        if (erro) {
+          return res.status(403).send(erro.toString());
+        }
+
+        return res.send("Sended");
+      });
+    }
+  },
+  resetPassword: async (req, res) => {
+    const resetPasswordToken = req.query.resetPasswordToken || undefined;
+
+    if (!resetPasswordToken) {
+      return res.status(400).send({ message: "reset password token request" });
+    }
+
+    const userFound = await User.findOne({
+      resetPasswordToken: resetPasswordToken,
+      resetPasswordExpires: {
+        ">=": Date.now()
+      }
+    });
+
+    if (!userFound) {
+      return res
+        .status(400)
+        .send({ message: "password reset link is invalid or has expried" });
+    } else {
+      return res.status(200).send(userFound);
+    }
+  },
+
+  saveNotificationToken: async (req, res) => {
+    const notiToken = req.body.token || undefined;
+    const userId = req.body.userId || undefined;
+
+    if (!userId) {
+      return res.status(401).send({
+        message: "user id required"
+      });
+    }
+
+    if (!notiToken) {
+      return res.status(401).send({
+        message: "notification token required"
+      });
+    }
+
+    const userUpdated = await User.updateOne({ id: userId }).set({
+      notificationToken: notiToken
+    });
+
+    if (userUpdated) {
+      return res.status(200).send(userUpdated);
+      // return res.status(200).send({message: "token is saved"})
+    } else {
+      return res.status(401).send({
+        message: `The database does not contain a user id: ${userId}`
+      });
+    }
+  },
+  deleteNotificationToken: async (req, res) => {
+    const userId = req.body.userId;
+
+    if (!userId) {
+      return res.status(401).send({
+        message: "user id required"
+      });
+    }
+
+    const userUpdated = await User.updateOne({ id: userId }).set({
+      notificationToken: ""
+    });
+
+    if (userUpdated) {
+      return res.status(200).send(userUpdated);
+      // return res.status(200).send({message: "token is delete"})
+    } else {
+      return res.status(401).send({
+        message: `The database does not contain a user id: ${userId}`
+      });
+    }
+  },
+
   deactivationUser: async (req, res) => {
     const userId = req.params.userId || undefined;
 
@@ -219,55 +366,6 @@ module.exports = {
     } else {
       return res.status(403).send({
         message: `The database does not contain this user id: ${userId}`
-      });
-    }
-  },
-
-  saveNotificationToken: async (req, res) => {
-    const notiToken = req.body.token || undefined;
-    const userId = req.body.userId || undefined;
-
-    if (!userId)
-      return res.status(401).send({
-        message: "user id required"
-      });
-
-    if (!notiToken)
-      return res.status(401).send({
-        message: "notification token required"
-      });
-
-    const userUpdated = await User.updateOne({ id: userId }).set({
-      notificationToken: notiToken
-    });
-
-    if (userUpdated) {
-      return res.status(200).send(userUpdated);
-      // return res.status(200).send({message: "token is saved"})
-    } else {
-      return res.status(401).send({
-        message: `The database does not contain a user id: ${userId}`
-      });
-    }
-  },
-  deleteNotificationToken: async (req, res) => {
-    const userId = req.body.userId;
-
-    if (!userId)
-      return res.status(401).send({
-        message: "user id required"
-      });
-
-    const userUpdated = await User.updateOne({ id: userId }).set({
-      notificationToken: ""
-    });
-
-    if (userUpdated) {
-      return res.status(200).send(userUpdated);
-      // return res.status(200).send({message: "token is delete"})
-    } else {
-      return res.status(401).send({
-        message: `The database does not contain a user id: ${userId}`
       });
     }
   }

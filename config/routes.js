@@ -1,35 +1,6 @@
-/**
- * Route Mappings
- * (sails.config.routes)
- *
- * Your routes tell Sails what to do each time it receives a request.
- *
- * For more information on configuring custom routes, check out:
- * https://sailsjs.com/anatomy/config/routes-js
- */
-
 module.exports.routes = {
-  /***************************************************************************
-   *                                                                          *
-   * Make the view located at `views/homepage.ejs` your home page.            *
-   *                                                                          *
-   * (Alternatively, remove this and add an `index.html` file in your         *
-   * `assets` directory)                                                      *
-   *                                                                          *
-   ***************************************************************************/
-
   "/": { view: "pages/homepage" },
 
-  /***************************************************************************
-   *                                                                          *
-   * More custom routes here...                                               *
-   * (See https://sailsjs.com/config/routes for examples.)                    *
-   *                                                                          *
-   * If a request to a URL doesn't match any of the routes in this file, it   *
-   * is matched against "shadow routes" (e.g. blueprint routes).  If it does  *
-   * not match any of those, it is matched against static assets.             *
-   *                                                                          *
-   ***************************************************************************/
   // Auth controllers
   "PUT /api/v1/auth/me/": "AuthController.currentUser",
   "POST /api/v1/auth/signup": "AuthController.signup",
@@ -43,12 +14,16 @@ module.exports.routes = {
   "POST /api/v1/users/change-password": "UserController.changePassword",
   "POST /api/v1/users/change-profile-photo":
     "UserController.changeProfilePicture",
-  "POST /api/v1/users/deactivation": "UserController.deactivationUser",
-  "POST /api/v1/users/reactivating": "UserController.reactivatingUser",
+  "POST /api/v1/users/forgot-password": "UserController.forgotPassword",
+  "GET /api/v1/users/reset-password": "UserController.resetPassword",
+
   "POST /api/v1/users/notifications/add":
     "UserController.saveNotificationToken",
   "POST /api/v1/users/notifications/delete":
     "UserController.deleteNotificationToken",
+
+  "POST /api/v1/users/deactivation": "UserController.deactivationUser",
+  "POST /api/v1/users/reactivating": "UserController.reactivatingUser",
 
   // Follow controllers
   "POST /api/v1/follows/add": "FollowController.addFollow",
@@ -101,8 +76,5 @@ module.exports.routes = {
   "POST /api/v1/users/notifications/read":
     "NotificationsController.readNotification",
   "POST /api/v1/users/notifications/read-all":
-    "NotificationsController.readAllNotification",
-
-  // test send email
-  "POST /api/v1/email/send": "SendMailController.send"
+    "NotificationsController.readAllNotification"
 };
