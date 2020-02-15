@@ -115,11 +115,8 @@ module.exports = {
 
     if (!userId) return res.status(401).send({ message: "ID user required." });
 
-    if (!oldPassword)
-      return res.status(401).send({ message: "Old password required." });
-
     if (!newPassword)
-      return res.status(401).send({ message: "New password required." });
+      return res.status(401).send({ message: "Password required." });
 
     // check old password correct
     userFound = await User.findOne({
@@ -132,7 +129,10 @@ module.exports = {
         .send({ message: "The database does not contain a user id" });
 
     // have a password
-    if (userFound.isAuthenticateLogin) {
+    if (!userFound.isAuthenticateLogin) {
+      if (!oldPassword)
+        return res.status(401).send({ message: "Old password required." });
+
       const passValid = await bcrypt.compare(oldPassword, userFound.password);
 
       if (!passValid)
@@ -147,6 +147,7 @@ module.exports = {
       password: newPassword,
       isAuthenticateLogin: false
     });
+
     return res.status(200).send({ message: "Your password changed" });
   },
   changeProfilePicture: async (req, res) => {

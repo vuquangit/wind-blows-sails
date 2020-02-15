@@ -101,5 +101,8 @@ module.exports.routes = {
   "POST /api/v1/users/notifications/read":
     "NotificationsController.readNotification",
   "POST /api/v1/users/notifications/read-all":
-    "NotificationsController.readAllNotification"
+    "NotificationsController.readAllNotification",
+
+  // test send email
+  "POST /api/v1/email/send": "SendMailController.send"
 };

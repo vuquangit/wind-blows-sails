@@ -126,8 +126,6 @@ module.exports = {
       username: req.body.username || null,
       fullName: req.body.fullName || null,
       password: req.body.password || null,
-      phoneNumber: req.body.phoneNumber || null,
-      profilePictureUrl: req.body.profilePictureUrl || "",
       emailVerified: false,
       isNew: true,
       isVerified: false,
@@ -165,7 +163,7 @@ module.exports = {
           where: { email: userParams.email }
         });
 
-        if (!userFound) {
+        if (userFound) {
           return res.status(401).send({ message: "Email already exists." });
         }
 
@@ -174,8 +172,8 @@ module.exports = {
           where: { username: userParams.username }
         });
 
-        if (!usernameFound) {
-          return res.status(401).send({ message: "username already exists." });
+        if (usernameFound) {
+          return res.status(401).send({ message: "Username already exists." });
         }
 
         // Create new user

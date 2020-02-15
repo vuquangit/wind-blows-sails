@@ -169,6 +169,7 @@ module.exports = {
     }
 
     const data = await PostService.post(postId, viewerId);
+
     if (data) {
       return res.status(200).send(data);
     } else {
