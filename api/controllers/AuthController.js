@@ -82,18 +82,6 @@ module.exports = {
       }
     }
 
-    // User.validatePassword(password, userFound, (err, valid) => {
-    //   if (err) {
-    //     console.log(err);
-    //     res.status(403);
-    //   } else if (!valid) {
-    //     console.log("check pass", valid);
-    //     res.status(401).send({
-    //       message: "Invalid Credentials"
-    //     });
-    //   }
-    // });
-
     const passValid = await bcrypt.compare(password, userFound.password);
 
     if (!passValid) {
@@ -106,8 +94,6 @@ module.exports = {
     // count follow, media of user
     const counts = await UserService.counts(userFound.id);
 
-    // if no errors were thrown, then grant them a new token
-    // set these config vars in config/local.js, or preferably in config/env/production.js as an environment variable
     var token = jwt.sign({ user: userFound.id }, process.env.JWT_SECRET, {
       expiresIn: 3600
     });

@@ -27,4 +27,26 @@ module.exports.policies = {
   //   login: true,
   //   register: true
   // }
+
+  BlockedController: {
+    "*": "isAuthenticated"
+  },
+  FollowController: {
+    "*": "isAuthenticated"
+  },
+  NotificationsController: {
+    "*": "isAuthenticated"
+  },
+  PostController: {
+    "*": "isAuthenticated"
+  },
+  SavePostController: {
+    "*": "isAuthenticated"
+  },
+  UploadImageController: {
+    "*": "isAuthenticated"
+  },
+  UserController: {
+    "*": "isAuthenticated"
+  }
 };

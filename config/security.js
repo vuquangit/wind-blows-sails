@@ -40,8 +40,9 @@ module.exports.security = {
       "http://localhost:3000",
       "https://wind-blows.firebaseapp.com",
       "https://the-wind-blows.herokuapp.com"
-    ]
+    ],
     // headers: "if-modified-since, content-type"
+    allowRequestHeaders: "content-type, authorization"
   }
 
   /****************************************************************************
