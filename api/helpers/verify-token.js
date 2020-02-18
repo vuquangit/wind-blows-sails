@@ -49,29 +49,38 @@ module.exports = {
 
     // check for a JWT token in the header
     const authorization = req.header("authorization");
+    // console.log(authorization, "authorization");
 
     if (authorization) {
       const token = authorization.split("Bearer ")[1];
       if (!token) {
-        return exits.invalid();
+        return res.status(401).send({ message: "token user not found" });
+        // throw "invalid";
       }
 
       // if there is something, attempt to parse it as a JWT token
-      return jwt.verify(token, process.env.JWT_SECRET, async (err, payload) => {
-        if (err || !payload.user) {
-          return exits.invalid();
-        }
+      return jwt.verify(
+        token,
+        process.env.JWT_SECRET_ACCESS_TOKEN,
+        async (err, payload) => {
+          if (err || !payload.user) {
+            return res.status(401).send({ message: err });
+            // throw "invalid";
+          }
 
-        const user = await User.findOne(payload.user);
-        if (!user) {
-          return exits.invalid();
-        }
+          const user = await User.findOne(payload.user);
+          if (!user) {
+            return res.status(401).send({ message: "user not found" });
+            // throw "invalid";
+          }
 
-        return exits.success();
-      });
+          return exits.success();
+        }
+      );
     }
 
     // if neither a cookie nor auth header are present, then there was no attempt to authenticate
-    return exits.invalid();
+    return res.status(401).send({ message: "jwt verify: failed" });
+    // throw "invalid";
   }
 };

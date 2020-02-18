@@ -5,6 +5,7 @@ module.exports.routes = {
   "PUT /api/v1/auth/me/": "AuthController.currentUser",
   "POST /api/v1/auth/signup": "AuthController.signup",
   "POST /api/v1/auth/login": "AuthController.login",
+  "POST /api/v1/auth/token": "AuthController.refreshToken",
 
   // User controllers
   "POST /api/v1/username/": "UserController.userNameInfo",

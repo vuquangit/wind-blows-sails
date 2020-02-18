@@ -94,17 +94,12 @@ module.exports = {
     // count follow, media of user
     const counts = await UserService.counts(userFound.id);
 
-    var token = jwt.sign({ user: userFound.id }, process.env.JWT_SECRET, {
-      expiresIn: 3600
-    });
-    // set a cookie on the client side that they can't modify unless they sign out (just for web apps)
-    res.cookie("sailsjwt", token, {
-      signed: true,
-      // domain: '.yourdomain.com', // always use this in production to whitelist your domain
-      maxAge: 3600
-    });
+    const tokens = {
+      token: await AuthService.generateAccessToken(userFound.id),
+      refreshToken: await AuthService.generateRefreshToken(userFound.id)
+    };
 
-    res.status(200).send({ user: { ...userFound, counts }, token: token });
+    res.status(200).send({ user: { ...userFound, counts }, tokens });
   },
   signup: async (req, res) => {
     const userParams = {
@@ -172,21 +167,16 @@ module.exports = {
           media: 0
         };
 
-        // after creating a user record, log them in at the same time by issuing their first jwt token and setting a cookie
-        var token = jwt.sign({ user: user.id }, process.env.JWT_SECRET, {
-          expiresIn: 3600
-        });
-        res.cookie("sailsjwt", token, {
-          signed: true,
-          // domain: '.yourdomain.com', // always use this in production to whitelist your domain
-          maxAge: 3600
-        });
+        const tokens = {
+          token: await AuthService.generateAccessToken(userFound.id),
+          refreshToken: await AuthService.generateRefreshToken(userFound.id)
+        };
 
-        return res.status(201).send({ user: { ...user, counts }, token });
+        return res.status(201).send({ user: { ...user, counts }, tokens });
       }
     });
   },
-  currentUser: async function(req, res) {
+  currentUser: async (req, res) => {
     const email = req.body.email;
 
     if (!email) {
@@ -239,6 +229,7 @@ module.exports = {
         userParams.profilePictureUrl,
         {
           folder: "the-wind-blows",
+          // eslint-disable-next-line camelcase
           use_filename: true
         },
         (error, result) => {
@@ -250,47 +241,54 @@ module.exports = {
           const createUser = async () =>
             await AuthService.createUser(userParams, false);
 
-          createUser().then(dataUser => {
-            // get token
-            var token = jwt.sign(
-              { user: dataUser.id },
-              process.env.JWT_SECRET,
-              {
-                expiresIn: 3600
-              }
-            );
-            // set a cookie on the client side that they can't modify unless they sign out (just for web apps)
-            res.cookie("sailsjwt", token, {
-              signed: true,
-              maxAge: 3600
-            });
-
-            return res.status(200).send({ user: dataUser, token });
+          createUser().then(async dataUser => {
+            const tokens = await AuthService.generateTokens(dataUser.id);
+            return res.status(200).send({ user: dataUser, tokens });
           });
         }
       );
     } else {
-      // counts of user
       const counts = await UserService.counts(userFound.id);
-
-      // Token user
-      var token = jwt.sign({ user: userFound.id }, process.env.JWT_SECRET, {
-        expiresIn: 3600
-      });
-      // set a cookie on the client side that they can't modify unless they sign out (just for web apps)
-      res.cookie("sailsjwt", token, {
-        signed: true,
-        maxAge: 3600
-      });
+      const tokens = await AuthService.generateTokens(userFound.id);
 
       return res.status(200).send({
         user: { ...userFound, counts, isAuthenticateLogin: true },
-        token
+        tokens
       });
     }
   },
 
-  logout: function(req, res) {
+  refreshToken: async (req, res) => {
+    // check header or url parameters or post parameters for token
+    var refreshToken = req.body.refreshToken;
+    if (!refreshToken) {
+      return res.status(401).json({ message: "refresh token request" });
+    }
+
+    //
+    jwt.verify(
+      refreshToken,
+      process.env.JWT_SECRET_REFRESH_TOKEN,
+      async (err, payload) => {
+        if (err || !payload.user) {
+          return res.status(401).send({ message: err });
+        }
+
+        const user = await User.findOne(payload.user);
+        if (!user) {
+          return res.status(401).send({ message: "user not found" });
+        }
+
+        const token = await AuthService.generateAccessToken(user.id);
+
+        return res.status(201).send({
+          token
+        });
+      }
+    );
+  },
+
+  logout: async (req, res) => {
     res.clearCookie("sailsjwt");
     res.user = null;
     return res.ok();

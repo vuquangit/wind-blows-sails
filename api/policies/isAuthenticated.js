@@ -9,23 +9,21 @@
  */
 
 module.exports = async function(req, res, next) {
-  // await sails.helpers.verifyToken.with({ req, res });
-  // next();
+  await sails.helpers.verifyToken.with({ req, res });
+  next();
 
-  sails.helpers.verifyToken
-    .with({
-      req: req,
-      res: res
-    })
-    .switch({
-      error: function(err) {
-        return res.serverError(err);
-      },
-      invalid: function(err) {
-        return res.status(401).send({ message: err });
-      },
-      success: function() {
-        return next();
-      }
-    });
+  // const result = await sails.helpers.verifyToken
+  //   .with({
+  //     req: req,
+  //     res: res
+  //   })
+  //   .intercept("invalid", err => {
+  //     // return 'badRequest';
+  //     console.log("invalid error: ", err);
+  //     return res.status(401).send({ message: err });
+  //   })
+  //   .catch(err => {
+  //     console.log("cath error: ");
+  //     return res.status(401).send({ message: err });
+  //   });
 };

@@ -1,3 +1,5 @@
+var jwt = require("jsonwebtoken");
+
 module.exports = {
   createUser: async (userParams, isRequestPassword) => {
     if (isRequestPassword) {
@@ -49,5 +51,51 @@ module.exports = {
     }
 
     return newUser;
+  },
+  generateRefreshToken: async user => {
+    const refreshToken = await jwt.sign(
+      { user: user },
+      process.env.JWT_SECRET_REFRESH_TOKEN,
+      {
+        expiresIn: process.env.JWT_EXPIRES_REFRESH_TOKEN
+      }
+    );
+
+    return refreshToken;
+  },
+  generateAccessToken: async user => {
+    const token = await jwt.sign(
+      { user: user },
+      process.env.JWT_SECRET_ACCESS_TOKEN,
+      {
+        expiresIn: process.env.JWT_EXPIRES_ACCESS_TOKEN
+      }
+    );
+
+    return token;
+  },
+  generateTokens: async user => {
+    const refreshToken = await jwt.sign(
+      { user: user },
+      process.env.JWT_SECRET_REFRESH_TOKEN,
+      {
+        expiresIn: process.env.JWT_EXPIRES_REFRESH_TOKEN
+      }
+    );
+
+    const token = await jwt.sign(
+      { user: user },
+      process.env.JWT_SECRET_ACCESS_TOKEN,
+      {
+        expiresIn: process.env.JWT_EXPIRES_ACCESS_TOKEN
+      }
+    );
+
+    return {
+      tokenType: "Bearer",
+      refreshToken,
+      token,
+      expiredIn: process.env.JWT_EXPIRES_ACCESS_TOKEN
+    };
   }
 };

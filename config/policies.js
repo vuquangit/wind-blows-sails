@@ -47,6 +47,8 @@ module.exports.policies = {
     "*": "isAuthenticated"
   },
   UserController: {
-    "*": "isAuthenticated"
+    "*": "isAuthenticated",
+    saveNotificationToken: true,
+    deleteNotificationToken: true
   }
 };
