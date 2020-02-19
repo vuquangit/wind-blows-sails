@@ -5,12 +5,12 @@ module.exports = {
 
     if (!ownerId)
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Add blocked failed. Owner ID is request." });
 
     if (!userIdBlocked)
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Add blocked failed. User ID blocked is request" });
 
     const userValid = await User.findOne({
@@ -21,7 +21,7 @@ module.exports = {
 
     if (userValid === undefined)
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Add blocked failed. Owner ID not found." });
     else {
       const userBlockValid = await User.findOne({
@@ -31,7 +31,7 @@ module.exports = {
       });
 
       if (userBlockValid === undefined)
-        return res.status(401).json({
+        return res.status(400).json({
           message: "Add blocked failed. User ID blocked is not found."
         });
 
@@ -42,7 +42,7 @@ module.exports = {
       });
 
       if (userIdFound !== undefined)
-        return res.status(401).json({
+        return res.status(400).json({
           message: "Add blocked failed. User ID blocked adready added."
         });
       else {
@@ -62,12 +62,12 @@ module.exports = {
 
     if (!ownerId)
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Unblock failed. Owner ID is request." });
 
     if (!userIdBlocked)
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Unblock failed. User ID unblock is request" });
 
     const _unblock = await Blocked.destroyOne({
@@ -77,7 +77,7 @@ module.exports = {
     if (_unblock) {
       return res.status(200).send({ message: "Unblock successfully" });
     } else
-      return res.status(401).send({
+      return res.status(400).send({
         message: "Unblock failed. The database does not have a blocked..."
       });
   },
@@ -92,7 +92,7 @@ module.exports = {
       });
     }
 
-    if (!id) return res.status(401).json({ message: "Owner ID is request." });
+    if (!id) return res.status(400).json({ message: "Owner ID is request." });
 
     const blockedList = await User.findOne({
       where: { id: id },

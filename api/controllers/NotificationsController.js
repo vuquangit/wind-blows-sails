@@ -11,7 +11,7 @@ module.exports = {
     }
 
     if (!userId) {
-      return res.status(401).send({ message: "User id is request" });
+      return res.status(400).send({ message: "User id is request" });
     }
 
     const UserFound = await User.findOne({
@@ -39,7 +39,7 @@ module.exports = {
       });
 
     if (UserFound === undefined) {
-      return res.status(401).send({ message: "User id not found" });
+      return res.status(400).send({ message: "User id not found" });
     } else {
       const totalItem = await User.findOne({ id: userId }).populate(
         "notifications"
@@ -104,7 +104,7 @@ module.exports = {
   totalUnread: async (req, res) => {
     const userId = req.body.userId || undefined;
 
-    if (!userId) return res.status(401).send({ message: "User id is request" });
+    if (!userId) return res.status(400).send({ message: "User id is request" });
 
     const UserFound = await User.findOne({
       id: userId
@@ -120,7 +120,7 @@ module.exports = {
       });
 
     if (UserFound === undefined) {
-      return res.status(401).send({ message: "User id not found" });
+      return res.status(400).send({ message: "User id not found" });
     } else {
       return res
         .status(200)
@@ -129,7 +129,7 @@ module.exports = {
   },
   readNotification: async (req, res) => {
     const id = req.body.id || undefined;
-    if (!id) return res.status(401).send({ message: "id request" });
+    if (!id) return res.status(400).send({ message: "id request" });
 
     const NotiUpdated = await Notifications.updateOne({ id: id })
       .set({
@@ -143,12 +143,12 @@ module.exports = {
       });
 
     if (NotiUpdated) return res.status(200).send(NotiUpdated);
-    else return res.status(401).send({ message: "id notification not found" });
+    else return res.status(400).send({ message: "id notification not found" });
   },
   readAllNotification: async (req, res) => {
     const userId = req.body.userId || undefined;
 
-    if (!userId) return res.status(401).send({ message: "user id request" });
+    if (!userId) return res.status(400).send({ message: "user id request" });
 
     const NotiUpdated = await Notifications.update({
       receiverId: userId
@@ -165,6 +165,6 @@ module.exports = {
       });
 
     if (NotiUpdated) return res.status(200).send(NotiUpdated);
-    else return res.status(401).send({ message: "user id not found" });
+    else return res.status(400).send({ message: "user id not found" });
   }
 };

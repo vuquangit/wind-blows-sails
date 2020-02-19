@@ -12,11 +12,11 @@ module.exports = {
     }
 
     if (!ownerId) {
-      return res.status(401).send({ message: "ownerId is request" });
+      return res.status(400).send({ message: "ownerId is request" });
     }
 
     if (!viewerId) {
-      return res.status(401).send({ message: "viewerId is request" });
+      return res.status(400).send({ message: "viewerId is request" });
     }
 
     const postFound = await User.findOne({
@@ -51,7 +51,7 @@ module.exports = {
       if (data !== undefined) {
         return res.send({ data: data, totalItem: totalItem });
       } else {
-        return res.status(401).send({ message: "User id not found" });
+        return res.status(400).send({ message: "User id not found" });
       }
     });
   },
@@ -61,13 +61,13 @@ module.exports = {
 
     if (!userId) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Save post failed. User id request." });
     }
 
     if (!postId) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Save post failed. Post id request." });
     }
 
@@ -79,7 +79,7 @@ module.exports = {
 
     if (userValid === undefined) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Save post failed. User ID is not valid." });
     } else {
       console.log(postId, "postId");
@@ -89,7 +89,7 @@ module.exports = {
 
       if (postValid === undefined) {
         return res
-          .status(401)
+          .status(400)
           .json({ message: "Save post failed. Post ID is not valid." });
       } else {
         const userLiked = await SavePost.findOne({
@@ -101,7 +101,7 @@ module.exports = {
 
         if (userLiked !== undefined) {
           return res
-            .status(401)
+            .status(400)
             .send({ message: "userID has saved this postdId" });
         } else {
           await SavePost.create({
@@ -125,13 +125,13 @@ module.exports = {
 
     if (!userId) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Delete save post failed. User id request." });
     }
 
     if (!postId) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Delete save post failed. Post id request." });
     }
 
@@ -143,7 +143,7 @@ module.exports = {
 
     if (userValid === undefined) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Delete save post failed. User ID is not valid." });
     } else {
       const postValid = await Posts.findOne({
@@ -152,7 +152,7 @@ module.exports = {
 
       if (postValid === undefined) {
         return res
-          .status(401)
+          .status(400)
           .json({ message: "Delete save post failed. Post ID is not valid." });
       } else {
         const burnedPostLike = await SavePost.destroyOne({

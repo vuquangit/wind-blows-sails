@@ -5,12 +5,12 @@ module.exports = {
 
     //#region Check valid
     if (!viewerId || !userId)
-      return res.status(401).send({
+      return res.status(400).send({
         message: "id or id following request"
       });
 
     if (viewerId === userId)
-      return res.status(401).send({
+      return res.status(400).send({
         message: "id and id following is duplicate"
       });
 
@@ -20,7 +20,7 @@ module.exports = {
     });
 
     if (userOwner === undefined)
-      return res.status(401).send({
+      return res.status(400).send({
         message: "owner id not found"
       });
 
@@ -30,7 +30,7 @@ module.exports = {
     });
 
     if (userFollowing === undefined) {
-      return res.status(401).send({
+      return res.status(400).send({
         message: "user id will following not found"
       });
     }
@@ -43,7 +43,7 @@ module.exports = {
     });
 
     if (followFound.following.length)
-      return res.status(401).send({ message: "owner id adready following" });
+      return res.status(400).send({ message: "owner id adready following" });
     else await User.addToCollection(viewerId, "following", userId);
 
     // create notification
@@ -69,12 +69,12 @@ module.exports = {
     const idUnfollow = req.body.userId;
 
     if (!viewerId || !idUnfollow)
-      return res.status(401).send({
+      return res.status(400).send({
         message: "owner id or following id is request"
       });
 
     if (viewerId === idUnfollow)
-      return res.status(401).send({
+      return res.status(400).send({
         message: "owner ID and following ID is duplicate"
       });
 
@@ -84,7 +84,7 @@ module.exports = {
     });
 
     if (userFound.length === 0) {
-      return res.status(401).send({
+      return res.status(400).send({
         message: "user id not found"
       });
     }
@@ -95,7 +95,7 @@ module.exports = {
     });
 
     if (userFollowing.length === 0)
-      return res.status(401).send({
+      return res.status(400).send({
         message: "user id will following not found"
       });
 
@@ -124,7 +124,7 @@ module.exports = {
     }
 
     if (!id) {
-      return res.status(401).send({
+      return res.status(400).send({
         message: "id request"
       });
     }
@@ -192,12 +192,12 @@ module.exports = {
       });
 
     if (!username)
-      return res.status(401).send({
+      return res.status(400).send({
         message: "username request"
       });
 
     if (!viewerId)
-      return res.status(401).send({
+      return res.status(400).send({
         message: "viewer Id request"
       });
 
@@ -268,7 +268,7 @@ module.exports = {
     }
 
     if (!id) {
-      return res.status(401).send({
+      return res.status(400).send({
         message: "id request"
       });
     }
@@ -317,12 +317,12 @@ module.exports = {
       });
 
     if (!username)
-      return res.status(401).send({
+      return res.status(400).send({
         message: "username request"
       });
 
     if (!viewerId)
-      return res.status(401).send({
+      return res.status(400).send({
         message: "viewer Id request"
       });
 

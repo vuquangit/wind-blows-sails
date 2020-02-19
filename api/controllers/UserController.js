@@ -1,5 +1,4 @@
 var bcrypt = require("bcryptjs");
-var jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 
@@ -8,7 +7,7 @@ module.exports = {
     const userId = req.params.id || undefined;
 
     if (!userId) {
-      return res.status(401).send({ message: "User id is request" });
+      return res.status(400).send({ message: "User id is request" });
     }
 
     const userFound = await User.findOne({
@@ -26,15 +25,21 @@ module.exports = {
         "website",
         "isVerified"
       ]
-    });
+    })
+      .catch({ name: "UsageError" }, err => {
+        return res.badRequest(err);
+      })
+      .catch(err => {
+        return res.serverError(err);
+      });
 
-    if (userFound !== undefined) {
+    if (userFound) {
       // counts of user
-      const counts = await UserService.counts(userFound.id);
+      const counts = await UserService.counts(userId);
 
       return res.status(200).send({ ...userFound, counts });
     } else {
-      return res.status(401).send({ message: "User id not found" });
+      return res.status(400).send({ message: "User id not found" });
     }
   },
   userNameInfo: async (req, res) => {
@@ -42,7 +47,7 @@ module.exports = {
     const viewerId = req.body.viewerId || undefined;
 
     if (!username) {
-      return res.status(401).send({ message: "User name is request" });
+      return res.status(400).send({ message: "User name is request" });
     }
 
     const userFound = await User.findOne({
@@ -61,7 +66,13 @@ module.exports = {
         "isVerified",
         "phoneNumber"
       ]
-    });
+    })
+      .catch({ name: "UsageError" }, err => {
+        return res.badRequest(err);
+      })
+      .catch(err => {
+        return res.serverError(err);
+      });
 
     if (userFound !== undefined) {
       // counts of user
@@ -81,7 +92,7 @@ module.exports = {
         return res.status(200).send({ user: { ...userFound, counts } });
       }
     } else {
-      return res.status(401).send({ message: "User name not found" });
+      return res.status(400).send({ message: "User name not found" });
     }
   },
   updateInfoUser: async (req, res) => {
@@ -97,7 +108,7 @@ module.exports = {
     };
 
     if (!userParams.id) {
-      return res.status(401).send({ message: "ID user required." });
+      return res.status(400).send({ message: "ID user required." });
     }
 
     const updatedUser = await User.updateOne({ id: userParams.id }).set(
@@ -123,7 +134,7 @@ module.exports = {
     }
 
     if (!newPassword) {
-      return res.status(401).send({ message: "Password required." });
+      return res.status(400).send({ message: "Password required." });
     }
 
     // check old password correct
@@ -140,13 +151,13 @@ module.exports = {
     // have a password
     if (isConfirmOldPassword) {
       if (!oldPassword) {
-        return res.status(401).send({ message: "Old password required." });
+        return res.status(400).send({ message: "Old password required." });
       }
 
       const passValid = await bcrypt.compare(oldPassword, userFound.password);
 
       if (!passValid) {
-        return res.status(401).send({
+        return res.status(400).send({
           message:
             "Sorry, your password was incorrect. Please double-check your password."
         });
@@ -169,16 +180,16 @@ module.exports = {
     const profilePicturePublicId = req.body.profilePicturePublicId || undefined;
 
     if (_.isUndefined(req.param("userId"))) {
-      return res.status(401).send({ message: "userId required." });
+      return res.status(400).send({ message: "userId required." });
     }
 
     if (_.isUndefined(req.param("profilePictureUrl"))) {
-      return res.status(401).send({ message: "profilePictureUrl required." });
+      return res.status(400).send({ message: "profilePictureUrl required." });
     }
 
     if (_.isUndefined(req.param("profilePicturePublicId"))) {
       return res
-        .status(401)
+        .status(400)
         .send({ message: "profilePicturePublicId required." });
     }
 
@@ -284,13 +295,13 @@ module.exports = {
     const userId = req.body.userId || undefined;
 
     if (!userId) {
-      return res.status(401).send({
+      return res.status(400).send({
         message: "user id required"
       });
     }
 
     if (!notiToken) {
-      return res.status(401).send({
+      return res.status(400).send({
         message: "notification token required"
       });
     }
@@ -303,7 +314,7 @@ module.exports = {
       return res.status(200).send(userUpdated);
       // return res.status(200).send({message: "token is saved"})
     } else {
-      return res.status(401).send({
+      return res.status(400).send({
         message: `The database does not contain a user id: ${userId}`
       });
     }
@@ -312,7 +323,7 @@ module.exports = {
     const userId = req.body.userId;
 
     if (!userId) {
-      return res.status(401).send({
+      return res.status(400).send({
         message: "user id required"
       });
     }
@@ -325,7 +336,7 @@ module.exports = {
       return res.status(200).send(userUpdated);
       // return res.status(200).send({message: "token is delete"})
     } else {
-      return res.status(401).send({
+      return res.status(400).send({
         message: `The database does not contain a user id: ${userId}`
       });
     }
@@ -335,7 +346,7 @@ module.exports = {
     const userId = req.params.userId || undefined;
 
     if (_.isUndefined(req.param("userId"))) {
-      return res.status(401).send({ message: "userId required." });
+      return res.status(400).send({ message: "userId required." });
     }
 
     const updatedUser = await User.updateOne({ id: userId }).set({
@@ -354,7 +365,7 @@ module.exports = {
     const userId = req.params.userId || undefined;
 
     if (_.isUndefined(req.param("userId"))) {
-      return res.status(401).send({ message: "userId required." });
+      return res.status(400).send({ message: "userId required." });
     }
 
     const updatedUser = await User.updateOne({ id: userId }).set({

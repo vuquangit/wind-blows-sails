@@ -24,14 +24,14 @@ module.exports = {
 
     if (!username) {
       if (!email) {
-        return res.status(401).send({
+        return res.status(400).send({
           message: "Email or username required"
         });
       }
     }
 
     if (!password) {
-      return res.status(401).send({
+      return res.status(400).send({
         message: "Password required"
       });
     }
@@ -64,7 +64,7 @@ module.exports = {
     }
 
     if (userFound === undefined && username === undefined) {
-      return res.status(401).send({
+      return res.status(400).send({
         message:
           "The email you entered doesn't belong to an account. Please check your email and try again."
       });
@@ -75,7 +75,7 @@ module.exports = {
       });
 
       if (userFound === undefined) {
-        return res.status(401).send({
+        return res.status(400).send({
           message:
             "The username you entered doesn't belong to an account. Please check your username and try again."
         });
@@ -85,7 +85,7 @@ module.exports = {
     const passValid = await bcrypt.compare(password, userFound.password);
 
     if (!passValid) {
-      return res.status(401).send({
+      return res.status(400).send({
         message:
           "Sorry, your password was incorrect. Please double-check your password."
       });
@@ -109,16 +109,16 @@ module.exports = {
     };
 
     if (_.isUndefined(req.param("email"))) {
-      return res.status(401).send({ message: "An email address is required." });
+      return res.status(400).send({ message: "An email address is required." });
     }
 
     if (_.isUndefined(req.param("password"))) {
-      return res.status(401).send({ message: "A password is required." });
+      return res.status(400).send({ message: "A password is required." });
     }
 
     if (req.param("password").length < 8) {
       return res
-        .status(401)
+        .status(400)
         .send({ message: "Password must be at least 8 characters." });
     }
 
@@ -130,7 +130,7 @@ module.exports = {
       },
       invalid: () => {
         return res
-          .status(401)
+          .status(400)
           .send({ message: "Doesn't look like an email address." });
       },
       success: async () => {
@@ -140,7 +140,7 @@ module.exports = {
         });
 
         if (userFound) {
-          return res.status(401).send({ message: "Email already exists." });
+          return res.status(400).send({ message: "Email already exists." });
         }
 
         // check username
@@ -149,7 +149,7 @@ module.exports = {
         });
 
         if (usernameFound) {
-          return res.status(401).send({ message: "Username already exists." });
+          return res.status(400).send({ message: "Username already exists." });
         }
 
         // Create new user
@@ -172,7 +172,7 @@ module.exports = {
     const email = req.body.email;
 
     if (!email) {
-      return res.status(401).send({
+      return res.status(400).send({
         message: "Email required"
       });
     }
@@ -254,7 +254,7 @@ module.exports = {
     // check header or url parameters or post parameters for token
     var refreshToken = req.body.refreshToken;
     if (!refreshToken) {
-      return res.status(401).json({ message: "refresh token request" });
+      return res.status(400).json({ message: "refresh token request" });
     }
 
     //
@@ -268,7 +268,7 @@ module.exports = {
 
         const user = await User.findOne(payload.user);
         if (!user) {
-          return res.status(401).send({ message: "user not found" });
+          return res.status(400).send({ message: "user not found" });
         }
 
         const token = await AuthService.generateAccessToken(user.id);

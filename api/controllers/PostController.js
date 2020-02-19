@@ -12,11 +12,11 @@ module.exports = {
     }
 
     if (!ownerId) {
-      return res.status(401).send({ message: "owner id is request" });
+      return res.status(400).send({ message: "owner id is request" });
     }
 
     if (!viewerId) {
-      return res.status(401).send({ message: "viewer id is request" });
+      return res.status(400).send({ message: "viewer id is request" });
     }
 
     await User.findOne({
@@ -38,7 +38,7 @@ module.exports = {
       })
       .then(user => {
         if (user === undefined) {
-          return res.status(401).send({ message: "User id not found" });
+          return res.status(400).send({ message: "User id not found" });
         } else {
           if (user.postId.length > 0) {
             const fetchPost = async () =>
@@ -66,7 +66,7 @@ module.exports = {
               if (data !== undefined) {
                 return res.send({ data: data, totalItem: totalItem });
               } else {
-                return res.status(401).send({ message: "User id not found" });
+                return res.status(400).send({ message: "User id not found" });
               }
             });
           } else {
@@ -93,7 +93,7 @@ module.exports = {
     }
 
     if (!userId) {
-      return res.status(401).send({ message: "User id is request" });
+      return res.status(400).send({ message: "User id is request" });
     }
 
     const userFound = await User.findOne({ id: userId })
@@ -153,7 +153,7 @@ module.exports = {
         res.status(200).send([]);
       }
     } else {
-      res.status(401).send({ message: "user id not found" });
+      res.status(400).send({ message: "user id not found" });
     }
   },
   post: async (req, res) => {
@@ -161,11 +161,11 @@ module.exports = {
     const viewerId = req.body.viewerId || undefined;
 
     if (!postId) {
-      return res.status(401).json({ message: "post Id request." });
+      return res.status(400).json({ message: "post Id request." });
     }
 
     if (!viewerId) {
-      return res.status(401).json({ message: "viewer Id request." });
+      return res.status(400).json({ message: "viewer Id request." });
     }
 
     const data = await PostService.post(postId, viewerId);
@@ -188,7 +188,7 @@ module.exports = {
     };
 
     if (!postParams.ownerId) {
-      return res.status(401).json({ message: "Add failed. Owner ID request." });
+      return res.status(400).json({ message: "Add failed. Owner ID request." });
     }
 
     if (
@@ -196,7 +196,7 @@ module.exports = {
       postParams.sidecarChildren.length === 0
     ) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Add failed. Image source request" });
     }
 
@@ -207,7 +207,7 @@ module.exports = {
     });
 
     if (userValid === undefined) {
-      return res.status(401).json({ message: "Add failed. User not found." });
+      return res.status(400).json({ message: "Add failed. User not found." });
     } else {
       const posted = await Posts.create(postParams)
         .fetch()
@@ -227,11 +227,11 @@ module.exports = {
     };
 
     if (!postId) {
-      return res.status(401).json({ message: "post Id request." });
+      return res.status(400).json({ message: "post Id request." });
     }
 
     if (!postParams.sidecarChildren) {
-      return res.status(401).json({ message: "image request." });
+      return res.status(400).json({ message: "image request." });
     }
 
     var updatedPost = await Posts.updateOne({ id: postId }).set(postParams);
@@ -239,7 +239,7 @@ module.exports = {
     if (updatedPost) {
       return res.status(200).send(updatedPost);
     } else {
-      return res.status(401).send({
+      return res.status(400).send({
         message: `The database does not contain a post id: ${postId}`
       });
     }
@@ -249,7 +249,7 @@ module.exports = {
 
     if (!postId) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Delete failed. Post ID request." });
     }
 
@@ -302,11 +302,11 @@ module.exports = {
     const page = parseInt(req.query.page || 1);
 
     if (!postId) {
-      return res.status(401).json({ message: "Post ID request." });
+      return res.status(400).json({ message: "Post ID request." });
     }
 
     if (!viewerId) {
-      return res.status(401).json({ message: "Viewer ID request." });
+      return res.status(400).json({ message: "Viewer ID request." });
     }
 
     const skip = (page - 1) * limit;
@@ -325,7 +325,7 @@ module.exports = {
     const totalLikes = await Posts.findOne({ id: postId }).populate("likeId");
 
     if (dataFound === undefined) {
-      return res.status(401).send({ message: "Data likes post not found" });
+      return res.status(400).send({ message: "Data likes post not found" });
     } else {
       // fetch follower info
       const fetchFollowers = async () => {
@@ -368,13 +368,13 @@ module.exports = {
 
     if (!userId) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Like post failed. User id request." });
     }
 
     if (!postId) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Like post failed. Post id request." });
     }
 
@@ -386,7 +386,7 @@ module.exports = {
 
     if (userValid === undefined) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Like post failed. User ID is not valid." });
     } else {
       const postValid = await Posts.findOne({
@@ -395,7 +395,7 @@ module.exports = {
 
       if (postValid === undefined) {
         return res
-          .status(401)
+          .status(400)
           .json({ message: "Like post failed. Post ID is not valid." });
       } else {
         const userLiked = await PostLikes.findOne({
@@ -407,7 +407,7 @@ module.exports = {
 
         if (userLiked !== undefined) {
           return res
-            .status(401)
+            .status(400)
             .send({ message: "user ID has liked this post ID" });
         } else {
           await PostLikes.create({
@@ -452,7 +452,7 @@ module.exports = {
 
     if (!userId) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Like post failed. User id request." });
     }
 
@@ -498,7 +498,7 @@ module.exports = {
 
     if (!postId) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Comments failed. User id request." });
     }
 
@@ -565,13 +565,13 @@ module.exports = {
 
     if (!cmtParams.userId) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Add comments failed. User ID request." });
     }
 
     if (!cmtParams.postId) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Add comments failed. Post ID request." });
     }
 
@@ -583,7 +583,7 @@ module.exports = {
 
     if (userValid === undefined) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Add comments failed. User ID is not valid." });
     } else {
       const postValid = await Posts.findOne({
@@ -596,7 +596,7 @@ module.exports = {
 
       if (postValid === undefined) {
         return res
-          .status(401)
+          .status(400)
           .json({ message: "Add comments failed. Post ID is not valid." });
       } else {
         const postCommentsCreated = await PostComments.create(cmtParams)
@@ -643,7 +643,7 @@ module.exports = {
 
     if (!commentsId) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Delete comments failed. Comments ID request." });
     }
 
@@ -675,13 +675,13 @@ module.exports = {
 
     if (!commentsId) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Like comments failed. Comments ID request." });
     }
 
     if (!viewerId) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Like comments failed. Viewer ID request." });
     }
 
@@ -706,7 +706,7 @@ module.exports = {
     );
 
     if (dataFound === undefined) {
-      return res.status(401).send({
+      return res.status(400).send({
         message: "Like comments failed. Data likes comments not found"
       });
     } else {
@@ -843,13 +843,13 @@ module.exports = {
 
     if (!userId) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Unlike comments failed. userId request." });
     }
 
     if (!commentsId) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: "Unlike comments failed. commentsId request." });
     }
 
