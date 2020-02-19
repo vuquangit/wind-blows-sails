@@ -93,12 +93,7 @@ module.exports = {
 
     // count follow, media of user
     const counts = await UserService.counts(userFound.id);
-
-    const tokens = {
-      token: await AuthService.generateAccessToken(userFound.id),
-      refreshToken: await AuthService.generateRefreshToken(userFound.id)
-    };
-
+    const tokens = await AuthService.generateTokens(userFound.id);
     res.status(200).send({ user: { ...userFound, counts }, tokens });
   },
   signup: async (req, res) => {
@@ -167,10 +162,7 @@ module.exports = {
           media: 0
         };
 
-        const tokens = {
-          token: await AuthService.generateAccessToken(userFound.id),
-          refreshToken: await AuthService.generateRefreshToken(userFound.id)
-        };
+        const tokens = await AuthService.generateTokens(userFound.id);
 
         return res.status(201).send({ user: { ...user, counts }, tokens });
       }
