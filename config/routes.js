@@ -77,5 +77,9 @@ module.exports.routes = {
   "POST /api/v1/users/notifications/read":
     "NotificationsController.readNotification",
   "POST /api/v1/users/notifications/read-all":
-    "NotificationsController.readAllNotification"
+    "NotificationsController.readAllNotification",
+
+  // explore
+  "GET /api/v1/explore/people/suggested": "ExploreController.suggestions",
+  "GET /api/v1/explore/people/search": "ExploreController.search"
 };

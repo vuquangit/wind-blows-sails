@@ -16,17 +16,6 @@ module.exports.policies = {
    *                                                                          *
    ***************************************************************************/
   // '*': true,
-  //
-  // PageController: {
-  //   "*": "checkForUser",
-  //   welcome: "isAuthenticated",
-  //   profile: "isAuthenticated"
-  // },
-  // UserController: {
-  //   "*": "isAuthenticated",
-  //   login: true,
-  //   register: true
-  // }
 
   BlockedController: {
     "*": "isAuthenticated"
@@ -52,5 +41,8 @@ module.exports.policies = {
     deleteNotificationToken: true,
     forgotPassword: true,
     resetPassword: true
+  },
+  ExploreController: {
+    "*": "isAuthenticated"
   }
 };

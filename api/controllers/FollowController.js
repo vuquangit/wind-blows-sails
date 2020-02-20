@@ -250,10 +250,10 @@ module.exports = {
           return Promise.all(fetchRelationship);
         };
 
-        fetchFollowing().then(following => {
-          return res.status(200).send({ ...userFound, counts, following });
+        fetchFollowing().then(data => {
+          return res.status(200).send({ data, totalItems: counts.followedBy });
         });
-      } else return res.status(200).send({ ...userFound, counts });
+      } else return res.status(200).send({ data: [], totalItems: 0 });
     }
   },
   follower: async (req, res) => {
@@ -374,10 +374,10 @@ module.exports = {
           return Promise.all(fetchRelationship);
         };
 
-        fetchFollowers().then(follower => {
-          return res.status(200).send({ ...userFound, counts, follower });
+        fetchFollowers().then(data => {
+          return res.status(200).send({ data, totalItems: counts.followedBy });
         });
-      } else return res.status(200).send({ ...userFound, counts });
+      } else return res.status(200).send({ data: [], totalItems: 0 });
     }
   }
 };
