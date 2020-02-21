@@ -164,9 +164,9 @@ module.exports = {
       return res.status(400).json({ message: "post Id request." });
     }
 
-    if (!viewerId) {
-      return res.status(400).json({ message: "viewer Id request." });
-    }
+    // if (!viewerId) {
+    //   return res.status(400).json({ message: "viewer Id request." });
+    // }
 
     const data = await PostService.post(postId, viewerId);
 

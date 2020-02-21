@@ -5,10 +5,10 @@ module.exports = {
         message: "owner ID request"
       };
 
-    if (!viewerId)
-      return {
-        message: "viewer ID request"
-      };
+    // if (!viewerId)
+    //   return {
+    //     message: "viewer ID request"
+    //   };
 
     const relationshipDefault = {
       blockedByViewer: {
@@ -29,7 +29,7 @@ module.exports = {
       }
     };
 
-    if (ownerId === viewerId) return relationshipDefault;
+    if (!viewerId || ownerId === viewerId) return relationshipDefault;
 
     const ownerFound = await User.findOne({
       where: { id: ownerId },
@@ -44,11 +44,6 @@ module.exports = {
     })
       .populate("blockedId", { where: { id: ownerId } })
       .populate("following", { where: { id: ownerId } });
-
-    // console.log("owner ID", ownerId);
-    // console.log("viewer ID", viewerId);
-    // console.log("ownerFound", ownerFound);
-    // console.log("viewerFound", viewerFound);
 
     if (viewerFound === undefined || ownerFound === undefined)
       return relationshipDefault;

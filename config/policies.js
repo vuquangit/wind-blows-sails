@@ -27,7 +27,9 @@ module.exports.policies = {
     "*": "isAuthenticated"
   },
   PostController: {
-    "*": "isAuthenticated"
+    "*": "isAuthenticated",
+    post: true,
+    comments: true
   },
   SavePostController: {
     "*": "isAuthenticated"
@@ -40,7 +42,8 @@ module.exports.policies = {
     saveNotificationToken: true,
     deleteNotificationToken: true,
     forgotPassword: true,
-    resetPassword: true
+    resetPassword: true,
+    userIdInfo: true
   },
   ExploreController: {
     "*": "isAuthenticated"
