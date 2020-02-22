@@ -67,8 +67,9 @@ module.exports.routes = {
   "POST /api/v1/saved/delete": "SavePostController.deleteSavePost",
 
   // Image upload
-  "POST /api/v1/upload-image/upload": "UploadImageController.uploadImage",
-  "POST /api/v1/upload-image/delete": "UploadImageController.deleteImage",
+  "POST /api/v1/images/upload": "UploadImageController.uploadImage",
+  "POST /api/v1/images/uploads": "UploadImageController.uploadImages",
+  "POST /api/v1/images/delete": "UploadImageController.deleteImage",
 
   // Notifications
   "GET /api/v1/users/notifications": "NotificationsController.notifications",

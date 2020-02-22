@@ -10,6 +10,29 @@ cloudinary.config({
 
 module.exports = {
   uploadImage: async (req, res) => {
+    const value = req.body.data || undefined;
+
+    if (!value) {
+      res.status(400).send({ message: "no data to upload image" });
+    }
+
+    cloudinary.v2.uploader.upload(
+      value,
+      {
+        folder: "the-wind-blows",
+        // eslint-disable-next-line camelcase
+        use_filename: true
+      },
+      (error, result) => {
+        if (error) {
+          res.status(400).json(err);
+        }
+
+        return res.status(201).json(result);
+      }
+    );
+  },
+  uploadImages: async (req, res) => {
     const values = req.body.data || undefined;
 
     if (!values) {
@@ -19,6 +42,7 @@ module.exports = {
     const promises = values.map(image =>
       cloudinary.v2.uploader.upload(image.base64, {
         folder: "the-wind-blows",
+        // eslint-disable-next-line camelcase
         use_filename: true
       })
     );
@@ -30,15 +54,11 @@ module.exports = {
   deleteImage: async (req, res) => {
     const publicId = req.body.publicId || undefined;
 
-    // console.log(req.allParams());
-    // console.log("publicId", publicId);
-
     if (!publicId) {
       return res.status(400).send({ message: "public_id image request" });
     }
 
     cloudinary.v2.uploader.destroy(publicId, (error, result) => {
-      console.log(result, error);
       if (error) {
         return res.status(400).send(error);
       }
