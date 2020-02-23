@@ -209,12 +209,18 @@ module.exports = {
     if (userValid === undefined) {
       return res.status(400).json({ message: "Add failed. User not found." });
     } else {
-      const posted = await Posts.create(postParams)
+      const postCreated = await Posts.create(postParams)
         .fetch()
         .catch(err => {
           res.serverError(err);
         });
-      return res.status(201).send(posted);
+
+      const _postCreated = await PostService.post(
+        postCreated.id,
+        postParams.ownerId
+      );
+
+      return res.status(201).send(_postCreated);
     }
   },
   modifyPost: async (req, res) => {

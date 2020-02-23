@@ -65,5 +65,20 @@ module.exports = {
 
       return res.status(200).send(result);
     });
+  },
+  deleteImages: async (req, res) => {
+    const publicIds = req.body.publicIds || undefined;
+
+    if (!publicIds) {
+      return res.status(400).send({ message: "public_id images request" });
+    }
+
+    const promises = publicIds.map(publicId =>
+      cloudinary.v2.uploader.destroy(publicId)
+    );
+
+    Promise.all(promises)
+      .then(results => res.json(results))
+      .catch(err => res.status(400).json(err));
   }
 };

@@ -70,6 +70,7 @@ module.exports.routes = {
   "POST /api/v1/images/upload": "UploadImageController.uploadImage",
   "POST /api/v1/images/uploads": "UploadImageController.uploadImages",
   "POST /api/v1/images/delete": "UploadImageController.deleteImage",
+  "POST /api/v1/images/deletes": "UploadImageController.deleteImages",
 
   // Notifications
   "GET /api/v1/users/notifications": "NotificationsController.notifications",
