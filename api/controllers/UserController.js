@@ -208,6 +208,31 @@ module.exports = {
         .send({ message: "The database does not contain this user id" });
     }
   },
+  changePrivateAccount: async (req, res) => {
+    const userId = req.body.userId || undefined;
+    const isPrivate = req.body.isPrivate || undefined;
+
+    console.log(userId, isPrivate);
+    if (!userId) {
+      return res.status(400).send({ message: "ID user required." });
+    }
+
+    if (!isPrivate) {
+      return res.status(400).send({ message: "isPrivate required." });
+    }
+
+    const updatedUser = await User.updateOne({ id: userId }).set({ isPrivate });
+
+    console.log(updatedUser);
+
+    if (updatedUser) {
+      return res.status(200).send({ user: updatedUser });
+    } else {
+      return res
+        .status(403)
+        .send({ message: "The database does not contain a user id" });
+    }
+  },
 
   forgotPassword: async (req, res) => {
     const email = req.body.email || undefined;

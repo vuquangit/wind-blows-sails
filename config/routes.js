@@ -17,6 +17,8 @@ module.exports.routes = {
     "UserController.changeProfilePicture",
   "POST /api/v1/users/forgot-password": "UserController.forgotPassword",
   "GET /api/v1/users/reset-password": "UserController.resetPassword",
+  "POST /api/v1/users/change-private-account":
+    "UserController.changePrivateAccount",
 
   "POST /api/v1/users/notifications/add":
     "UserController.saveNotificationToken",
