@@ -38,6 +38,7 @@ module.exports = {
           caption: postFound.caption,
           captionIsEdited: postFound.captionIsEdited,
           commentsDisabled: postFound.commentsDisabled,
+          location: postFound.location,
           postAt: postFound.createdAt,
           owner: postFound.ownerId[0],
           sidecarChildren: postFound.sidecarChildren,

@@ -180,9 +180,9 @@ module.exports = {
   addPost: async (req, res) => {
     const postParams = {
       caption: req.body.caption || "",
+      captionIsEdited: false,
       commentsDisabled: req.body.commentsDisabled || false,
       location: req.body.location || "",
-      captionIsEdited: req.body.captionIsEdited || false,
       ownerId: req.body.ownerId || undefined,
       sidecarChildren: req.body.sidecarChildren || undefined
     };
