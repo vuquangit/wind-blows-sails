@@ -210,20 +210,17 @@ module.exports = {
   },
   changePrivateAccount: async (req, res) => {
     const userId = req.body.userId || undefined;
-    const isPrivate = req.body.isPrivate || undefined;
+    const isPrivate = req.body.isPrivate;
 
-    console.log(userId, isPrivate);
     if (!userId) {
       return res.status(400).send({ message: "ID user required." });
     }
 
-    if (!isPrivate) {
+    if (typeof isPrivate !== "boolean") {
       return res.status(400).send({ message: "isPrivate required." });
     }
 
     const updatedUser = await User.updateOne({ id: userId }).set({ isPrivate });
-
-    console.log(updatedUser);
 
     if (updatedUser) {
       return res.status(200).send({ user: updatedUser });

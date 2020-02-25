@@ -283,6 +283,11 @@ module.exports = {
       });
     }
 
+    // delete Saved (bookmark)
+    const burnedPostLike = await SavePost.destroyOne({
+      postId: postId
+    });
+
     // finally delete post
     const burnedPost = await Posts.destroyOne({ id: postId });
 
