@@ -4,25 +4,28 @@ module.exports = {
     const userId = req.body ? req.body.userId : undefined;
 
     //#region Check valid
-    if (!viewerId || !userId)
+    if (!viewerId || !userId) {
       return res.status(400).send({
         message: "id or id following request"
       });
+    }
 
-    if (viewerId === userId)
+    if (viewerId === userId) {
       return res.status(400).send({
         message: "id and id following is duplicate"
       });
+    }
 
     // check id owner
     const userOwner = await User.findOne({
       where: { id: viewerId }
     });
 
-    if (userOwner === undefined)
+    if (userOwner === undefined) {
       return res.status(400).send({
         message: "owner id not found"
       });
+    }
 
     // check id follow
     const userFollowing = await User.findOne({
@@ -42,9 +45,11 @@ module.exports = {
       where: { id: userId }
     });
 
-    if (followFound.following.length)
+    if (followFound.following.length) {
       return res.status(400).send({ message: "owner id adready following" });
-    else await User.addToCollection(viewerId, "following", userId);
+    } else {
+      await User.addToCollection(viewerId, "following", userId);
+    }
 
     // create notification
     const token = _.get(userFollowing, "notificationToken") || "";
@@ -59,7 +64,9 @@ module.exports = {
       read: false
     });
 
-    if (token) await FcmService.sendNotification(token, title, body, link);
+    if (token) {
+      await FcmService.sendNotification(token, title, body, link);
+    }
 
     // response
     return res.status(200).send("You have already followed this account");
@@ -68,15 +75,17 @@ module.exports = {
     const viewerId = req.body.viewerId;
     const idUnfollow = req.body.userId;
 
-    if (!viewerId || !idUnfollow)
+    if (!viewerId || !idUnfollow) {
       return res.status(400).send({
         message: "owner id or following id is request"
       });
+    }
 
-    if (viewerId === idUnfollow)
+    if (viewerId === idUnfollow) {
       return res.status(400).send({
         message: "owner ID and following ID is duplicate"
       });
+    }
 
     // check id owner
     const userFound = await User.find({
@@ -94,10 +103,11 @@ module.exports = {
       where: { id: idUnfollow }
     });
 
-    if (userFollowing.length === 0)
+    if (userFollowing.length === 0) {
       return res.status(400).send({
         message: "user id will following not found"
       });
+    }
 
     await User.removeFromCollection(viewerId, "following", idUnfollow);
 
@@ -111,6 +121,7 @@ module.exports = {
     // reponse
     return res.status(200).send("You have unfollowed this account");
   },
+
   following: async (req, res) => {
     const id = req.query.id || undefined;
     const limit = parseInt(req.query.limit || 20);
@@ -131,7 +142,7 @@ module.exports = {
     //#endregion
 
     // find list
-    const follows = await User.findOne({
+    const userFound = await User.findOne({
       where: { id: id },
       select: ["id"]
     }).populate("following", {
@@ -149,11 +160,11 @@ module.exports = {
       limit: limit
     });
 
-    if (follows === undefined)
-      return res.send({ message: "user id not found" });
-    else {
-      if (follows.following.length > 0) {
-        follows.following = follows.following.map((item, idx) => {
+    if (userFound === undefined) {
+      return res.status(400).send({ message: "user id not found" });
+    } else {
+      if (userFound.following.length > 0) {
+        userFound.following = userFound.following.map((item, idx) => {
           const relationship = {
             blockedByViewer: {
               state: "BLOCK_STATUS_UNBLOCKED",
@@ -176,7 +187,14 @@ module.exports = {
         });
       }
 
-      res.status(200).send(follows);
+      const totalItems = await User.findOne({
+        id: id
+      }).populate("following");
+
+      return res.status(200).send({
+        data: userFound.following,
+        totalItems: totalItems.following.length
+      });
     }
   },
   usernameFollowing: async (req, res) => {
@@ -186,20 +204,23 @@ module.exports = {
     const page = parseInt(req.query.page || 1);
 
     //#region check valid
-    if ((page - 1) * limit < 0)
+    if ((page - 1) * limit < 0) {
       return res.send({
         message: "page or limit not correct"
       });
+    }
 
-    if (!username)
+    if (!username) {
       return res.status(400).send({
         message: "username request"
       });
+    }
 
-    if (!viewerId)
+    if (!viewerId) {
       return res.status(400).send({
         message: "viewer Id request"
       });
+    }
 
     //#endregion
 
@@ -222,17 +243,18 @@ module.exports = {
       limit: limit
     });
 
-    if (userFound === undefined)
+    if (userFound === undefined) {
       return res.send({ message: "username not found" });
-    else {
+    } else {
       // counts follows
       const counts = await UserService.counts(userFound.id);
 
       if (userFound.following.length > 0) {
         // Check viewer ID
         const viewerFound = await User.findOne({ id: viewerId });
-        if (viewerFound === undefined)
+        if (viewerFound === undefined) {
           return res.send({ message: "viewer ID not found" });
+        }
 
         // fetch following info
         const fetchFollowing = async () => {
@@ -253,7 +275,9 @@ module.exports = {
         fetchFollowing().then(data => {
           return res.status(200).send({ data, totalItems: counts.followedBy });
         });
-      } else return res.status(200).send({ data: [], totalItems: 0 });
+      } else {
+        return res.status(200).send({ data: [], totalItems: 0 });
+      }
     }
   },
   follower: async (req, res) => {
@@ -262,7 +286,7 @@ module.exports = {
     const page = parseInt(req.query.page || 1);
 
     if ((page - 1) * limit < 0) {
-      return res.send({
+      return res.status(400).send({
         message: "page or limit not correct"
       });
     }
@@ -273,18 +297,8 @@ module.exports = {
       });
     }
 
-    const userFound = await User.findOne({
-      where: { id: id }
-    });
-
-    if (userFound === undefined) {
-      return res.send({
-        message: "owner id not found"
-      });
-    }
-
     // find list
-    const followingList = await User.findOne({
+    const userFound = await User.findOne({
       where: { id: id },
       select: ["id"]
     }).populate("follower", {
@@ -301,8 +315,19 @@ module.exports = {
       skip: (page - 1) * limit,
       limit: limit
     });
-    if (followingList === undefined) return res.send({});
-    else res.status(200).send(followingList);
+
+    if (userFound === undefined) {
+      return res.status(400).send({ message: "user id not found" });
+    } else {
+      const totalItems = await User.findOne({
+        id: id
+      }).populate("follower");
+
+      res.status(200).send({
+        data: userFound.follower,
+        totalItems: totalItems.follower.length
+      });
+    }
   },
   usernameFollowers: async (req, res) => {
     const username = req.query.username || undefined;
@@ -311,20 +336,23 @@ module.exports = {
     const page = parseInt(req.query.page || 1);
 
     //#region check valid
-    if ((page - 1) * limit < 0)
+    if ((page - 1) * limit < 0) {
       return res.send({
         message: "page or limit not correct"
       });
+    }
 
-    if (!username)
+    if (!username) {
       return res.status(400).send({
         message: "username request"
       });
+    }
 
-    if (!viewerId)
+    if (!viewerId) {
       return res.status(400).send({
         message: "viewer Id request"
       });
+    }
 
     //#endregion
 
@@ -347,16 +375,17 @@ module.exports = {
       limit: limit
     });
 
-    if (userFound === undefined)
+    if (userFound === undefined) {
       return res.send({ message: "username not found" });
-    else {
+    } else {
       const counts = await UserService.counts(userFound.id);
 
       if (userFound.follower.length > 0) {
         // Check viewer ID
         const viewerFound = await User.findOne({ id: viewerId });
-        if (viewerFound === undefined)
+        if (viewerFound === undefined) {
           return res.send({ message: "viewer ID not found" });
+        }
 
         // fetch follower info
         const fetchFollowers = async () => {
@@ -377,7 +406,381 @@ module.exports = {
         fetchFollowers().then(data => {
           return res.status(200).send({ data, totalItems: counts.followedBy });
         });
-      } else return res.status(200).send({ data: [], totalItems: 0 });
+      } else {
+        return res.status(200).send({ data: [], totalItems: 0 });
+      }
     }
+  },
+
+  addFollowRequest: async (req, res) => {
+    const viewerId = req.body.viewerId || undefined;
+    const userId = req.body.userId || undefined;
+
+    //#region Check valid
+    if (!viewerId || !userId) {
+      return res.status(400).send({
+        message: "id or id following request"
+      });
+    }
+
+    if (viewerId === userId) {
+      return res.status(400).send({
+        message: "viewer id and user id following is duplicate"
+      });
+    }
+
+    // check id owner
+    const userOwner = await User.findOne({
+      where: { id: viewerId }
+    });
+
+    if (userOwner === undefined) {
+      return res.status(400).send({
+        message: "viewer Id id not found"
+      });
+    }
+
+    // check id follow
+    const userFollowingRequest = await User.findOne({
+      where: { id: userId }
+    });
+
+    if (userFollowingRequest === undefined) {
+      return res.status(400).send({
+        message: "user id will following not found"
+      });
+    }
+    //#endregion
+
+    const followFound = await User.findOne({
+      where: { id: viewerId }
+    }).populate("followingRequest", {
+      where: { id: userId }
+    });
+
+    if (followFound.followingRequest.length) {
+      return res.status(400).send({ message: "owner id follow requested" });
+    } else {
+      await User.addToCollection(viewerId, "followingRequest", userId);
+    }
+
+    // create notification
+    const token = _.get(userFollowingRequest, "notificationToken") || "";
+    const title = "New follow request";
+    const body = `Username @${userFollowingRequest.username} has requested follow you`;
+    const link = `/${userOwner.username}`;
+
+    await Notifications.create({
+      senderId: viewerId,
+      receiverId: userId,
+      typeNotification: NotificationTypes.NEW_FOLLOW,
+      read: false
+    });
+
+    if (token) {
+      await FcmService.sendNotification(token, title, body, link);
+    }
+
+    // response
+    return res
+      .status(200)
+      .send({ message: "You have already follow requested this user" });
+  },
+  unfollowRequest: async (req, res) => {
+    const viewerId = req.body.viewerId;
+    const ownerId = req.body.userId;
+
+    if (!viewerId || !ownerId) {
+      return res.status(400).send({
+        message: "owner id or following id is request"
+      });
+    }
+
+    if (viewerId === ownerId) {
+      return res.status(400).send({
+        message: "owner ID and following ID is duplicate"
+      });
+    }
+
+    // check id owner
+    const userFound = await User.find({
+      where: { id: viewerId }
+    });
+
+    if (userFound.length === 0) {
+      return res.status(400).send({
+        message: "viewer id not found"
+      });
+    }
+
+    // check id follow
+    const userFollowing = await User.find({
+      where: { id: ownerId }
+    });
+
+    if (userFollowing.length === 0) {
+      return res.status(400).send({
+        message: "user id will not found"
+      });
+    }
+
+    await User.removeFromCollection(viewerId, "followingRequest", ownerId);
+
+    // delete notification
+    await Notifications.destroy({
+      senderId: viewerId,
+      receiverId: ownerId,
+      typeNotification: NotificationTypes.NEW_FOLLOW
+    });
+
+    // reponse
+    return res
+      .status(200)
+      .send({ message: "You have cancel follow request this user" });
+  },
+  followRequests: async (req, res) => {
+    const id = req.query.id || undefined;
+    const limit = parseInt(req.query.limit || 20);
+    const page = parseInt(req.query.page || 1);
+
+    //#region check valid
+    if ((page - 1) * limit < 0) {
+      return res.status(400).send({
+        message: "page or limit not correct"
+      });
+    }
+
+    if (!id) {
+      return res.status(400).send({
+        message: "id request"
+      });
+    }
+    //#endregion
+
+    // find list
+    const followRequests = await User.findOne({
+      where: { id: id },
+      select: ["id"]
+    }).populate("followingRequest", {
+      select: [
+        "id",
+        "fullName",
+        "isNew",
+        "isPrivate",
+        "profilePictureUrl",
+        "profilePicturePublicId",
+        "username",
+        "isVerified"
+      ],
+      skip: (page - 1) * limit,
+      limit: limit
+    });
+
+    if (followRequests === undefined) {
+      return res.status(400).send({ message: "user id not found" });
+    } else {
+      if (followRequests.followingRequest.length > 0) {
+        followRequests.followingRequest = followRequests.followingRequest.map(
+          (item, idx) => {
+            const relationship = {
+              blockedByViewer: {
+                state: null,
+                stable: true
+              },
+              hasBlockedViewer: {
+                state: null,
+                stable: true
+              },
+              followedByViewer: {
+                state: "FOLLOW_STATUS_PRIVATE_REQUESTED",
+                stable: true
+              },
+              followsViewer: {
+                state: null,
+                stable: true
+              },
+              restrictedByViewer: {
+                stable: true,
+                state: "RESTRICT_STATUS_UNRESTRICTED"
+              }
+            };
+
+            return { user: item, relationship: relationship };
+          }
+        );
+      }
+
+      const totalItems = await User.findOne({ id: id }).populate(
+        "followingRequest"
+      );
+
+      return res.status(200).send({
+        data: followRequests.followingRequest,
+        totalItems: totalItems.length
+      });
+    }
+  },
+  followerRequests: async (req, res) => {
+    const id = req.query.id || undefined;
+    const limit = parseInt(req.query.limit || 20);
+    const page = parseInt(req.query.page || 1);
+
+    if ((page - 1) * limit < 0) {
+      return res.status(400).send({
+        message: "page or limit not correct"
+      });
+    }
+
+    if (!id) {
+      return res.status(400).send({
+        message: "id request"
+      });
+    }
+
+    // find list
+    const userFound = await User.findOne({
+      where: { id: id },
+      select: ["id"]
+    }).populate("followerRequest", {
+      select: [
+        "id",
+        "fullName",
+        "isNew",
+        "isPrivate",
+        "profilePictureUrl",
+        "profilePicturePublicId",
+        "username",
+        "isVerified"
+      ],
+      skip: (page - 1) * limit,
+      limit: limit
+    });
+
+    if (userFound === undefined) {
+      return res.status(400).send({ message: "user id not found" });
+    } else {
+      const totalItems = await User.findOne({
+        id: id
+      }).populate("followerRequest");
+
+      return res.status(200).send({
+        data: userFound.followerRequest,
+        totalItems: totalItems.followerRequest.length
+      });
+    }
+  },
+  approveFollow: async (req, res) => {
+    const viewerId = req.body.viewerId || undefined;
+    const ownerId = req.body.userId || undefined;
+
+    if (!viewerId || !ownerId) {
+      return res.status(400).send({
+        message: "owner id or following id is request"
+      });
+    }
+
+    if (viewerId === ownerId) {
+      return res.status(400).send({
+        message: "owner ID and following ID is duplicate"
+      });
+    }
+
+    // check id owner
+    const viewerFound = await User.find({
+      where: { id: viewerId }
+    }).populate("followingRequest", {
+      where: { id: ownerId }
+    });
+
+    if (!viewerFound.length) {
+      return res.status(400).send({
+        message: "viewer id not found"
+      });
+    }
+
+    if (_.get(viewerFound, "[0].followingRequest", []).length === 0) {
+      return res
+        .status(400)
+        .send({ message: "user have no follow requested for you" });
+    }
+
+    // check id follow
+    const ownerFound = await User.find({
+      where: { id: ownerId }
+    });
+
+    if (!ownerFound) {
+      return res.status(400).send({
+        message: "user id will not found"
+      });
+    }
+
+    // start following
+    await User.removeFromCollection(viewerId, "followingRequest", ownerId);
+    await User.addToCollection(viewerId, "following", ownerId);
+
+    // notification: send to follower
+    const token = _.get(viewerFound, "notificationToken", "");
+    const title = "New following";
+    const body = `Username @${ownerFound.username} accepted your follow request`;
+    const link = `/${ownerFound.username}`;
+
+    await Notifications.create({
+      senderId: ownerId,
+      receiverId: viewerId,
+      typeNotification: NotificationTypes.NEW_FOLLOW,
+      read: false
+    });
+
+    if (token) {
+      await FcmService.sendNotification(token, title, body, link);
+    }
+
+    // response
+    return res.status(200).send({ message: "You approved follow request" });
+  },
+  denyFollow: async (req, res) => {
+    const viewerId = req.body.viewerId || undefined;
+    const ownerId = req.body.userId || undefined;
+
+    if (!viewerId || !ownerId) {
+      return res.status(400).send({
+        message: "owner id or user id is request"
+      });
+    }
+
+    if (viewerId === ownerId) {
+      return res.status(400).send({
+        message: "owner ID and following ID is duplicate"
+      });
+    }
+
+    // check id owner
+    const viewerFound = await User.find({
+      where: { id: viewerId }
+    });
+
+    if (viewerFound.length === 0) {
+      return res.status(400).send({
+        message: "viewer id not found"
+      });
+    }
+
+    // check id follow
+    const ownerFound = await User.find({
+      where: { id: ownerId }
+    });
+
+    if (ownerFound.length === 0) {
+      return res.status(400).send({
+        message: "user id will not found"
+      });
+    }
+
+    //
+    await User.removeFromCollection(viewerId, "followingRequest", ownerId);
+
+    // response
+    return res.status(200).send({ message: "You have deny follow request" });
   }
 };

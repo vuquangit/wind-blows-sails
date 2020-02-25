@@ -102,17 +102,28 @@ module.exports = {
       type: "number"
     },
 
-    //  Follower model
+    // direct follow
     following: {
       collection: "user",
       via: "follower",
       dominant: true
     },
 
-    //  Following model
     follower: {
       collection: "user",
       via: "following"
+    },
+
+    // follow request
+    followingRequest: {
+      collection: "user",
+      via: "followerRequest",
+      dominant: true
+    },
+
+    followerRequest: {
+      collection: "user",
+      via: "followingRequest"
     },
 
     //  Blocked model

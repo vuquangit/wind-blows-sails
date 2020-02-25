@@ -38,6 +38,15 @@ module.exports.routes = {
   "GET /api/v1/follows/followers/username":
     "FollowController.usernameFollowers",
 
+  "POST /api/v1/follow-requests/add": "FollowController.addFollowRequest",
+  "POST /api/v1/follow-requests/unfollow": "FollowController.unfollowRequest",
+  "GET /api/v1/follow-requests/follow-requests":
+    "FollowController.followRequests",
+  "GET /api/v1/follow-requests/follower-requests":
+    "FollowController.followerRequests",
+  "POST /api/v1/follow-requests/approve": "FollowController.approveFollow",
+  "POST /api/v1/follow-requests/deny": "FollowController.denyFollow",
+
   // Blocked controllers
   "POST /api/v1/add-user-blocked": "BlockedController.addUserBlocked",
   "POST /api/v1/unblock": "BlockedController.unblock",
