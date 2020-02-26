@@ -1,16 +1,16 @@
 module.exports = {
   addFollow: async (req, res) => {
     const viewerId = req.body ? req.body.viewerId : undefined;
-    const userId = req.body ? req.body.userId : undefined;
+    const ownerId = req.body ? req.body.ownerId : undefined;
 
     //#region Check valid
-    if (!viewerId || !userId) {
+    if (!viewerId || !ownerId) {
       return res.status(400).send({
         message: "id or id following request"
       });
     }
 
-    if (viewerId === userId) {
+    if (viewerId === ownerId) {
       return res.status(400).send({
         message: "id and id following is duplicate"
       });
@@ -29,7 +29,7 @@ module.exports = {
 
     // check id follow
     const userFollowing = await User.findOne({
-      where: { id: userId }
+      where: { id: ownerId }
     });
 
     if (userFollowing === undefined) {
@@ -42,13 +42,13 @@ module.exports = {
     const followFound = await User.findOne({
       where: { id: viewerId }
     }).populate("following", {
-      where: { id: userId }
+      where: { id: ownerId }
     });
 
     if (followFound.following.length) {
       return res.status(400).send({ message: "owner id adready following" });
     } else {
-      await User.addToCollection(viewerId, "following", userId);
+      await User.addToCollection(viewerId, "following", ownerId);
     }
 
     // create notification
@@ -59,7 +59,7 @@ module.exports = {
 
     await Notifications.create({
       senderId: viewerId,
-      receiverId: userId,
+      receiverId: ownerId,
       typeNotification: NotificationTypes.NEW_FOLLOW,
       read: false
     });
@@ -73,15 +73,15 @@ module.exports = {
   },
   unfollow: async (req, res) => {
     const viewerId = req.body.viewerId;
-    const idUnfollow = req.body.userId;
+    const ownerId = req.body.ownerId;
 
-    if (!viewerId || !idUnfollow) {
+    if (!viewerId || !ownerId) {
       return res.status(400).send({
         message: "owner id or following id is request"
       });
     }
 
-    if (viewerId === idUnfollow) {
+    if (viewerId === ownerId) {
       return res.status(400).send({
         message: "owner ID and following ID is duplicate"
       });
@@ -100,7 +100,7 @@ module.exports = {
 
     // check id follow
     const userFollowing = await User.find({
-      where: { id: idUnfollow }
+      where: { id: ownerId }
     });
 
     if (userFollowing.length === 0) {
@@ -109,12 +109,12 @@ module.exports = {
       });
     }
 
-    await User.removeFromCollection(viewerId, "following", idUnfollow);
+    await User.removeFromCollection(viewerId, "following", ownerId);
 
     // delete notification
     await Notifications.destroy({
       senderId: viewerId,
-      receiverId: idUnfollow,
+      receiverId: ownerId,
       typeNotification: NotificationTypes.NEW_FOLLOW
     });
 
@@ -414,38 +414,38 @@ module.exports = {
 
   addFollowRequest: async (req, res) => {
     const viewerId = req.body.viewerId || undefined;
-    const userId = req.body.userId || undefined;
+    const ownerId = req.body.ownerId || undefined;
 
     //#region Check valid
-    if (!viewerId || !userId) {
+    if (!viewerId || !ownerId) {
       return res.status(400).send({
-        message: "id or id following request"
+        message: "viewerId or ownerId request"
       });
     }
 
-    if (viewerId === userId) {
+    if (viewerId === ownerId) {
       return res.status(400).send({
         message: "viewer id and user id following is duplicate"
       });
     }
 
     // check id owner
-    const userOwner = await User.findOne({
+    const viewerFound = await User.findOne({
       where: { id: viewerId }
     });
 
-    if (userOwner === undefined) {
+    if (viewerFound === undefined) {
       return res.status(400).send({
         message: "viewer Id id not found"
       });
     }
 
     // check id follow
-    const userFollowingRequest = await User.findOne({
-      where: { id: userId }
+    const ownerFound = await User.findOne({
+      where: { id: ownerId }
     });
 
-    if (userFollowingRequest === undefined) {
+    if (ownerFound === undefined) {
       return res.status(400).send({
         message: "user id will following not found"
       });
@@ -455,24 +455,26 @@ module.exports = {
     const followFound = await User.findOne({
       where: { id: viewerId }
     }).populate("followingRequest", {
-      where: { id: userId }
+      where: { id: ownerId }
     });
 
     if (followFound.followingRequest.length) {
-      return res.status(400).send({ message: "owner id follow requested" });
+      return res
+        .status(200)
+        .send({ message: "viewer has follow requested before." });
     } else {
-      await User.addToCollection(viewerId, "followingRequest", userId);
+      await User.addToCollection(viewerId, "followingRequest", ownerId);
     }
 
     // create notification
-    const token = _.get(userFollowingRequest, "notificationToken") || "";
+    const token = _.get(ownerFound, "notificationToken", "");
     const title = "New follow request";
-    const body = `Username @${userFollowingRequest.username} has requested follow you`;
-    const link = `/${userOwner.username}`;
+    const body = `Username @${ownerFound.username} has requested follow you`;
+    const link = `/${viewerFound.username}`;
 
     await Notifications.create({
       senderId: viewerId,
-      receiverId: userId,
+      receiverId: ownerId,
       typeNotification: NotificationTypes.NEW_FOLLOW,
       read: false
     });
@@ -488,7 +490,7 @@ module.exports = {
   },
   unfollowRequest: async (req, res) => {
     const viewerId = req.body.viewerId;
-    const ownerId = req.body.userId;
+    const ownerId = req.body.ownerId;
 
     if (!viewerId || !ownerId) {
       return res.status(400).send({
@@ -616,7 +618,7 @@ module.exports = {
 
       return res.status(200).send({
         data: followRequests.followingRequest,
-        totalItems: totalItems.length
+        totalItems: totalItems.followingRequest.length
       });
     }
   },
@@ -671,7 +673,7 @@ module.exports = {
   },
   approveFollow: async (req, res) => {
     const viewerId = req.body.viewerId || undefined;
-    const ownerId = req.body.userId || undefined;
+    const ownerId = req.body.ownerId || undefined;
 
     if (!viewerId || !ownerId) {
       return res.status(400).send({
@@ -701,7 +703,7 @@ module.exports = {
     if (_.get(viewerFound, "[0].followingRequest", []).length === 0) {
       return res
         .status(400)
-        .send({ message: "user have no follow requested for you" });
+        .send({ message: "user have no follow request to you" });
     }
 
     // check id follow
@@ -741,7 +743,7 @@ module.exports = {
   },
   denyFollow: async (req, res) => {
     const viewerId = req.body.viewerId || undefined;
-    const ownerId = req.body.userId || undefined;
+    const ownerId = req.body.ownerId || undefined;
 
     if (!viewerId || !ownerId) {
       return res.status(400).send({

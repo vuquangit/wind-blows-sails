@@ -36,14 +36,16 @@ module.exports = {
       select: ["id"]
     })
       .populate("blockedId", { where: { id: viewerId } })
-      .populate("following", { where: { id: viewerId } });
+      .populate("following", { where: { id: viewerId } })
+      .populate("followingRequest", { where: { id: viewerId } });
 
     const viewerFound = await User.findOne({
       where: { id: viewerId },
       select: ["id"]
     })
       .populate("blockedId", { where: { id: ownerId } })
-      .populate("following", { where: { id: ownerId } });
+      .populate("following", { where: { id: ownerId } })
+      .populate("followingRequest", { where: { id: ownerId } });
 
     if (viewerFound === undefined || ownerFound === undefined)
       return relationshipDefault;
@@ -58,7 +60,7 @@ module.exports = {
       },
       hasBlockedViewer: {
         state:
-          ownerId.blockedId === undefined || ownerId.blockedId.length
+          ownerFound.blockedId === undefined || ownerFound.blockedId.length
             ? "BLOCK_STATUS_UNBLOCKED"
             : "BLOCK_STATUS_BLOCKED",
         stable: true
@@ -67,6 +69,9 @@ module.exports = {
         state:
           viewerFound.following === undefined || !viewerFound.following.length
             ? "FOLLOW_STATUS_NOT_FOLLOWING"
+            : viewerFound.followingRequest === undefined ||
+              !viewerFound.followingRequest.length
+            ? "FOLLOW_STATUS_PRIVATE_REQUESTED"
             : "FOLLOW_STATUS_FOLLOWING",
         stable: true
       },
@@ -74,6 +79,9 @@ module.exports = {
         state:
           ownerFound.following === undefined || !ownerFound.following.length
             ? "FOLLOW_STATUS_NOT_FOLLOWING"
+            : ownerFound.followingRequest === undefined ||
+              !ownerFound.followingRequest.length
+            ? "FOLLOW_STATUS_PRIVATE_REQUESTED"
             : "FOLLOW_STATUS_FOLLOWING",
         stable: true
       }
