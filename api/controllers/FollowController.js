@@ -17,45 +17,42 @@ module.exports = {
     }
 
     // check id owner
-    const userOwner = await User.findOne({
+    const viewerFound = await User.findOne({
       where: { id: viewerId }
+    }).populate("following", {
+      where: { id: ownerId }
     });
 
-    if (userOwner === undefined) {
+    if (viewerFound === undefined) {
       return res.status(400).send({
         message: "owner id not found"
       });
     }
 
     // check id follow
-    const userFollowing = await User.findOne({
+    const ownerFound = await User.findOne({
       where: { id: ownerId }
     });
 
-    if (userFollowing === undefined) {
+    if (ownerFound === undefined) {
       return res.status(400).send({
         message: "user id will following not found"
       });
     }
     //#endregion
 
-    const followFound = await User.findOne({
-      where: { id: viewerId }
-    }).populate("following", {
-      where: { id: ownerId }
-    });
-
-    if (followFound.following.length) {
+    if (viewerFound.following.length) {
       return res.status(400).send({ message: "owner id adready following" });
     } else {
       await User.addToCollection(viewerId, "following", ownerId);
     }
 
     // create notification
-    const token = _.get(userFollowing, "notificationToken") || "";
+    const token = _.get(ownerFound, "notificationToken", "");
     const title = "New following";
-    const body = `Username @${userFollowing.username} has  following you`;
-    const link = `/${userOwner.username}`;
+    const body = `Username @${viewerFound.username} has  following you`;
+    const link = `/${viewerFound.username}`;
+    const icon = _.get(viewerFound, "profilePictureUrl", "");
 
     await Notifications.create({
       senderId: viewerId,
@@ -65,7 +62,7 @@ module.exports = {
     });
 
     if (token) {
-      await FcmService.sendNotification(token, title, body, link);
+      await FcmService.sendNotification(token, title, body, link, icon);
     }
 
     // response
@@ -116,6 +113,12 @@ module.exports = {
       senderId: viewerId,
       receiverId: ownerId,
       typeNotification: NotificationTypes.NEW_FOLLOW
+    });
+
+    await Notifications.destroy({
+      senderId: ownerId,
+      receiverId: viewerId,
+      typeNotification: NotificationTypes.NEW_FOLLOW_REQUEST
     });
 
     // reponse
@@ -458,6 +461,8 @@ module.exports = {
       where: { id: ownerId }
     });
 
+    // console.log(followFound);
+
     if (followFound.followingRequest.length) {
       return res
         .status(200)
@@ -469,18 +474,12 @@ module.exports = {
     // create notification
     const token = _.get(ownerFound, "notificationToken", "");
     const title = "New follow request";
-    const body = `Username @${ownerFound.username} has requested follow you`;
+    const body = `Username @${ownerFound.username} has requested to follow you`;
     const link = `/${viewerFound.username}`;
-
-    await Notifications.create({
-      senderId: viewerId,
-      receiverId: ownerId,
-      typeNotification: NotificationTypes.NEW_FOLLOW,
-      read: false
-    });
+    const icon = _.get(viewerFound, "profilePictureUrl", "");
 
     if (token) {
-      await FcmService.sendNotification(token, title, body, link);
+      await FcmService.sendNotification(token, title, body, link, icon);
     }
 
     // response
@@ -505,35 +504,36 @@ module.exports = {
     }
 
     // check id owner
-    const userFound = await User.find({
+    const viewerFound = await User.find({
       where: { id: viewerId }
+    }).populate("followingRequest", {
+      where: { id: ownerId }
     });
 
-    if (userFound.length === 0) {
+    if (viewerFound.length === 0) {
       return res.status(400).send({
         message: "viewer id not found"
       });
     }
 
     // check id follow
-    const userFollowing = await User.find({
+    const ownerFound = await User.find({
       where: { id: ownerId }
     });
 
-    if (userFollowing.length === 0) {
+    if (ownerFound.length === 0) {
       return res.status(400).send({
         message: "user id will not found"
       });
     }
 
-    await User.removeFromCollection(viewerId, "followingRequest", ownerId);
+    if (_.get(viewerFound, "[0].followingRequest", []).length === 0) {
+      return res
+        .status(400)
+        .send({ message: "user have no follow request to you" });
+    }
 
-    // delete notification
-    await Notifications.destroy({
-      senderId: viewerId,
-      receiverId: ownerId,
-      typeNotification: NotificationTypes.NEW_FOLLOW
-    });
+    await User.removeFromCollection(viewerId, "followingRequest", ownerId);
 
     // reponse
     return res
@@ -688,11 +688,12 @@ module.exports = {
     }
 
     // check id owner
-    const viewerFound = await User.find({
-      where: { id: viewerId }
-    }).populate("followingRequest", {
-      where: { id: ownerId }
-    });
+    const viewerFound = await User.find({ id: viewerId }).populate(
+      "followingRequest",
+      {
+        where: { id: ownerId }
+      }
+    );
 
     if (!viewerFound.length) {
       return res.status(400).send({
@@ -708,7 +709,7 @@ module.exports = {
 
     // check id follow
     const ownerFound = await User.find({
-      where: { id: ownerId }
+      id: ownerId
     });
 
     if (!ownerFound) {
@@ -721,25 +722,60 @@ module.exports = {
     await User.removeFromCollection(viewerId, "followingRequest", ownerId);
     await User.addToCollection(viewerId, "following", ownerId);
 
-    // notification: send to follower
-    const token = _.get(viewerFound, "notificationToken", "");
-    const title = "New following";
-    const body = `Username @${ownerFound.username} accepted your follow request`;
-    const link = `/${ownerFound.username}`;
+    // notification: send to viewer
+    const viewerToken = _.get(viewerFound, "notificationToken", "");
+    const viewerTitle = "New following";
+    const viewerBody = `Username @${ownerFound.username} accepted your follow request`;
+    const viewerLink = `/${ownerFound.username}`;
+    const viewerIcon = _.get(ownerFound, "profilePictureUrl", "");
 
     await Notifications.create({
       senderId: ownerId,
       receiverId: viewerId,
+      typeNotification: NotificationTypes.NEW_FOLLOW_REQUEST,
+      read: false
+    });
+    if (viewerToken) {
+      await FcmService.sendNotification(
+        viewerToken,
+        viewerTitle,
+        viewerBody,
+        viewerLink,
+        viewerIcon
+      );
+    }
+
+    //  notification: send to owner
+    const ownerToken = _.get(ownerFound, "notificationToken") || "";
+    const ownerTitle = "New following";
+    const ownerBody = `Username @${viewerFound.username} started following you.`;
+    const ownerLink = `/${viewerFound.username}`;
+    const ownerIcon = _.get(viewerFound, "profilePictureUrl", "");
+
+    await Notifications.create({
+      senderId: viewerId,
+      receiverId: ownerId,
       typeNotification: NotificationTypes.NEW_FOLLOW,
       read: false
     });
-
-    if (token) {
-      await FcmService.sendNotification(token, title, body, link);
+    if (ownerToken) {
+      await FcmService.sendNotification(
+        ownerToken,
+        ownerTitle,
+        ownerBody,
+        ownerLink,
+        ownerIcon
+      );
     }
 
+    const relationship = await FollowService.relationship(viewerId, ownerId);
+
     // response
-    return res.status(200).send({ message: "You approved follow request" });
+    return res.status(200).send({
+      message: "You approved follow request",
+      user: viewerFound,
+      relationship
+    });
   },
   denyFollow: async (req, res) => {
     const viewerId = req.body.viewerId || undefined;
@@ -782,7 +818,13 @@ module.exports = {
     //
     await User.removeFromCollection(viewerId, "followingRequest", ownerId);
 
+    const relationship = await FollowService.relationship(viewerId, ownerId);
+
     // response
-    return res.status(200).send({ message: "You have deny follow request" });
+    return res.status(200).send({
+      message: "You have deny follow request",
+      user: viewerFound,
+      relationship
+    });
   }
 };

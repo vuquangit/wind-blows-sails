@@ -53,7 +53,7 @@ module.exports = {
     const relationship = {
       blockedByViewer: {
         state:
-          viewerFound.blockedId == undefined || viewerFound.blockedId.length
+          viewerFound.blockedId === undefined || viewerFound.blockedId.length
             ? "BLOCK_STATUS_UNBLOCKED"
             : "BLOCK_STATUS_BLOCKED",
         stable: true
@@ -67,22 +67,23 @@ module.exports = {
       },
       followedByViewer: {
         state:
-          viewerFound.following === undefined || !viewerFound.following.length
-            ? "FOLLOW_STATUS_NOT_FOLLOWING"
-            : viewerFound.followingRequest === undefined ||
-              !viewerFound.followingRequest.length
+          viewerFound.following !== undefined &&
+          viewerFound.following.length > 0
+            ? "FOLLOW_STATUS_FOLLOWING"
+            : viewerFound.followingRequest !== undefined &&
+              viewerFound.followingRequest.length > 0
             ? "FOLLOW_STATUS_PRIVATE_REQUESTED"
-            : "FOLLOW_STATUS_FOLLOWING",
+            : "FOLLOW_STATUS_NOT_FOLLOWING",
         stable: true
       },
       followsViewer: {
         state:
-          ownerFound.following === undefined || !ownerFound.following.length
-            ? "FOLLOW_STATUS_NOT_FOLLOWING"
-            : ownerFound.followingRequest === undefined ||
-              !ownerFound.followingRequest.length
+          ownerFound.following !== undefined && ownerFound.following.length > 0
+            ? "FOLLOW_STATUS_FOLLOWING"
+            : ownerFound.followingRequest !== undefined &&
+              ownerFound.followingRequest.length > 0
             ? "FOLLOW_STATUS_PRIVATE_REQUESTED"
-            : "FOLLOW_STATUS_FOLLOWING",
+            : "FOLLOW_STATUS_NOT_FOLLOWING",
         stable: true
       }
     };

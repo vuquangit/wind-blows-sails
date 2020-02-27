@@ -4,8 +4,8 @@ const serviceAccount = {
   type: process.env.FIREBASE_TYPE,
   project_id: process.env.FIREBASE_PROJECT_ID,
   private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-  // private_key: process.env.FIREBASE_PRIVATE_KEY, // for development
-  private_key: JSON.parse(process.env.FIREBASE_PRIVATE_KEY), // for production
+  private_key: process.env.FIREBASE_PRIVATE_KEY, // for development
+  // private_key: JSON.parse(process.env.FIREBASE_PRIVATE_KEY), // for production
   client_email: process.env.FIREBASE_CLIENT_EMAIL,
   client_id: process.env.FIREBASE_CLIENT_ID,
   auth_uri: process.env.FIREBASE_AUTH_URL,
@@ -55,23 +55,32 @@ async function deleteAppInstanceToken(token) {
 // Sending User Notifications
 const messaging = admin.messaging();
 
-async function sendNotification(token, title = "", body = "", link = "") {
+async function sendNotification(
+  token,
+  title = "",
+  body = "",
+  link = "",
+  icon = ""
+) {
+  console.log("Send notification: ", token, title, body, link, icon);
+
   try {
     const message = {
       notification: {
-        title: title,
-        body: body
+        title,
+        body
       },
       webpush: {
         headers: {
           TTL: "0"
         },
         notification: {
-          icon:
-            "https://res.cloudinary.com/dnzsa2z7b/image/upload/v1581590799/the-wind-blows/icon/favicon_si4agl.ico"
+          icon: icon
+            ? icon
+            : "https://res.cloudinary.com/dnzsa2z7b/image/upload/v1581590799/the-wind-blows/icon/favicon_si4agl.ico"
         },
         fcm_options: {
-          link: link
+          link
         }
       },
       token: token
@@ -79,7 +88,7 @@ async function sendNotification(token, title = "", body = "", link = "") {
 
     await messaging.send(message);
 
-    console.log("Successfully sent message:");
+    console.log("Successfully sent message");
   } catch (err) {
     console.log(err);
   }

@@ -60,7 +60,8 @@ module.exports = {
               "username",
               "fullName",
               "profilePictureUrl",
-              "profilePicturePublicId"
+              "profilePicturePublicId",
+              "isPrivate"
             ]
           });
 
