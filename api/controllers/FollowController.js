@@ -688,27 +688,27 @@ module.exports = {
     }
 
     // check id owner
-    const viewerFound = await User.find({ id: viewerId }).populate(
+    const viewerFound = await User.findOne({ id: viewerId }).populate(
       "followingRequest",
       {
         where: { id: ownerId }
       }
     );
 
-    if (!viewerFound.length) {
+    if (!viewerFound) {
       return res.status(400).send({
         message: "viewer id not found"
       });
     }
 
-    if (_.get(viewerFound, "[0].followingRequest", []).length === 0) {
+    if (!viewerFound.followingRequest) {
       return res
         .status(400)
         .send({ message: "user have no follow request to you" });
     }
 
     // check id follow
-    const ownerFound = await User.find({
+    const ownerFound = await User.findOne({
       id: ownerId
     });
 
@@ -725,16 +725,10 @@ module.exports = {
     // notification: send to viewer
     const viewerToken = _.get(viewerFound, "notificationToken", "");
     const viewerTitle = "New following";
-    const viewerBody = `Username @${ownerFound.username} accepted your follow request`;
+    const viewerBody = `Username @${ownerFound.username} accepted your follow request.`;
     const viewerLink = `/${ownerFound.username}`;
     const viewerIcon = _.get(ownerFound, "profilePictureUrl", "");
 
-    await Notifications.create({
-      senderId: ownerId,
-      receiverId: viewerId,
-      typeNotification: NotificationTypes.NEW_FOLLOW_REQUEST,
-      read: false
-    });
     if (viewerToken) {
       await FcmService.sendNotification(
         viewerToken,
@@ -745,19 +739,20 @@ module.exports = {
       );
     }
 
+    await Notifications.create({
+      senderId: ownerId,
+      receiverId: viewerId,
+      typeNotification: NotificationTypes.NEW_FOLLOW_REQUEST,
+      read: false
+    });
+
     //  notification: send to owner
-    const ownerToken = _.get(ownerFound, "notificationToken") || "";
-    const ownerTitle = "New following";
+    const ownerToken = _.get(ownerFound, "notificationToken", "");
+    const ownerTitle = "New follower";
     const ownerBody = `Username @${viewerFound.username} started following you.`;
     const ownerLink = `/${viewerFound.username}`;
     const ownerIcon = _.get(viewerFound, "profilePictureUrl", "");
 
-    await Notifications.create({
-      senderId: viewerId,
-      receiverId: ownerId,
-      typeNotification: NotificationTypes.NEW_FOLLOW,
-      read: false
-    });
     if (ownerToken) {
       await FcmService.sendNotification(
         ownerToken,
@@ -767,10 +762,16 @@ module.exports = {
         ownerIcon
       );
     }
-
-    const relationship = await FollowService.relationship(viewerId, ownerId);
+    await Notifications.create({
+      senderId: viewerId,
+      receiverId: ownerId,
+      typeNotification: NotificationTypes.NEW_FOLLOW,
+      read: false
+    });
 
     // response
+    const relationship = await FollowService.relationship(ownerId, viewerId);
+
     return res.status(200).send({
       message: "You approved follow request",
       user: viewerFound,

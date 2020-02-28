@@ -85,12 +85,16 @@ module.exports.routes = {
 
   // Notifications
   "GET /api/v1/users/notifications": "NotificationsController.notifications",
-  "POST /api/v1/users/notifications/unread":
+  "POST /api/v1/users/notifications/total-unread":
     "NotificationsController.totalUnread",
   "POST /api/v1/users/notifications/read":
     "NotificationsController.readNotification",
+  "POST /api/v1/users/notifications/unread":
+    "NotificationsController.unreadNotification",
   "POST /api/v1/users/notifications/read-all":
     "NotificationsController.readAllNotification",
+  "POST /api/v1/users/notifications/delete":
+    "NotificationsController.deleteNotification",
 
   // explore
   "GET /api/v1/explore/people/suggested": "ExploreController.suggestions",

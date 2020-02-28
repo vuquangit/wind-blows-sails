@@ -154,6 +154,29 @@ module.exports = {
       return res.status(400).send({ message: "id notification not found" });
     }
   },
+  unreadNotification: async (req, res) => {
+    const id = req.body.id || undefined;
+    if (!id) {
+      return res.status(400).send({ message: "id request" });
+    }
+
+    const NotiUpdated = await Notifications.updateOne({ id: id })
+      .set({
+        read: false
+      })
+      .catch({ name: "UsageError" }, err => {
+        return res.badRequest(err);
+      })
+      .catch(err => {
+        return res.serverError(err);
+      });
+
+    if (NotiUpdated) {
+      return res.status(200).send(NotiUpdated);
+    } else {
+      return res.status(400).send({ message: "id notification not found" });
+    }
+  },
   readAllNotification: async (req, res) => {
     const userId = req.body.userId || undefined;
 
@@ -179,6 +202,26 @@ module.exports = {
       return res.status(200).send(NotiUpdated);
     } else {
       return res.status(400).send({ message: "user id not found" });
+    }
+  },
+  deleteNotification: async (req, res) => {
+    const id = req.body.id || undefined;
+    if (!id) {
+      return res.status(400).send({ message: "id request" });
+    }
+
+    const burnedNoti = await Notifications.destroyOne({ id: id })
+      .catch({ name: "UsageError" }, err => {
+        return res.badRequest(err);
+      })
+      .catch(err => {
+        return res.serverError(err);
+      });
+
+    if (burnedNoti) {
+      return res.status(200).send({ message: "Deleted this notification" });
+    } else {
+      return res.status(400).send({ message: "id notification not found" });
     }
   }
 };
