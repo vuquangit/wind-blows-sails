@@ -6,9 +6,15 @@ module.exports = {
     isAuthorVerified: { type: "boolean", defaultsTo: false },
     text: { type: "string", defaultsTo: "" },
 
-    //
+    // child comments
+    isChildComment: { type: "boolean", defaultsTo: false },
+    parentComment: {
+      collection: "postcomments",
+      via: "childComments"
+    },
     childComments: {
-      collection: "postcomments"
+      collection: "postcomments",
+      via: "parentComment"
     },
 
     // Add a reference to PostCommentsLikes

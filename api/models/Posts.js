@@ -6,6 +6,7 @@ module.exports = {
     commentsDisabled: { type: "boolean", defaultsTo: false },
     location: { type: "json" },
     sidecarChildren: { type: "json" },
+    deleted: { type: "boolean", defaultsTo: false },
 
     // references
     ownerId: {

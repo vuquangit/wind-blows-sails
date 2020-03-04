@@ -32,6 +32,8 @@ module.exports = {
     receiverId: {
       model: "user",
       required: true
-    }
+    },
+
+    deleted: { type: "boolean", defaultsTo: false }
   }
 };

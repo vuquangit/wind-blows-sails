@@ -65,8 +65,10 @@ module.exports.routes = {
   "POST /api/v1/post/likes/unlike": "PostController.unlikePost",
 
   "GET /api/v1/post/comments": "PostController.comments",
-  "POST /api/v1/post/comments/add": "PostController.addComments",
-  "POST /api/v1/post/comments/delete": "PostController.deleteComments",
+  "GET /api/v1/post/comments/child": "PostController.childComments",
+  "POST /api/v1/post/comments/add": "PostController.addComment",
+  "POST /api/v1/post/comments/delete": "PostController.deleteComment",
+  "POST /api/v1/post/comments/undo": "PostController.undoDeleteComment",
 
   "GET /api/v1/post/comments/likes": "PostController.likesComments",
   "POST /api/v1/post/comments/likes/like": "PostController.likeComments",
