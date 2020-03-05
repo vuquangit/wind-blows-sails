@@ -519,14 +519,13 @@ module.exports = {
       select: [
         "createdAt",
         "id",
-        "deleted",
         "didReportAsSpam",
         "isAuthorVerified",
         "text",
         "userId",
         "postId"
       ],
-      where: { isChildComment: false, deleted: false },
+      where: { isChildComment: false },
       skip: (page - 1) * limit,
       limit: limit,
       sort: "createdAt DESC"
@@ -536,7 +535,7 @@ module.exports = {
       where: { id: postId }
     })
       .populate("commentsId", {
-        where: { isChildComment: false, deleted: false }
+        where: { isChildComment: false }
       })
       .then(user => {
         if (user) {
@@ -552,9 +551,7 @@ module.exports = {
           id: item.id
         })
           .populate("postCommentsLikesId")
-          .populate("childComments", {
-            where: { deleted: false }
-          });
+          .populate("childComments");
 
         return {
           ...item,
@@ -606,17 +603,16 @@ module.exports = {
       select: [
         "createdAt",
         "id",
-        "deleted",
         "didReportAsSpam",
         "isAuthorVerified",
         "text",
         "userId",
         "postId"
       ],
-      where: { deleted: false },
+
       skip: (page - 1) * limit,
       limit: limit,
-      sort: "createdAt ASC"
+      sort: "createdAt DESC"
     });
 
     if (!PostCommentsFound)
@@ -645,9 +641,7 @@ module.exports = {
 
     const PostCommentsFoundTotal = await PostComments.findOne({
       id: parentCommentId
-    }).populate("childComments", {
-      where: { deleted: false }
-    });
+    }).populate("childComments");
 
     return res.status(200).send({
       childComments,
@@ -758,59 +752,36 @@ module.exports = {
         .json({ message: "Delete comments failed. Comments ID request." });
     }
 
-    // const burnedPostComments = await PostComments.destroyOne({
-    //   id: commentsId
-    // });
-    const burnedPostComments = await PostComments.updateOne({
+    // delete child comments
+    const PostCommentsFound = await PostComments.findOne({
       id: commentsId
-    }).set({
-      deleted: true
+    }).populate("childComments");
+
+    if (
+      PostCommentsFound &&
+      PostCommentsFound.childComments &&
+      PostCommentsFound.childComments.length > 0
+    ) {
+      PostCommentsFound.childComments.map(async item => {
+        await PostComments.destroyOne({
+          id: item.id
+        });
+      });
+    }
+
+    // delete comment
+    const burnedPostComments = await PostComments.destroyOne({
+      id: commentsId
     });
 
     if (burnedPostComments) {
       // delete noti add comments
-      // await Notifications.destroy({
-      //   typeNotification: NotificationTypes.NEW_COMMENT,
-      //   commentsId: commentsId
-      // });
-      await Notifications.updateOne({
+      await Notifications.destroy({
         typeNotification: NotificationTypes.NEW_COMMENT,
         commentsId: commentsId
-      }).set({
-        deleted: true
       });
 
       return res.status(200).json({ message: "Deleted this comment" });
-    } else {
-      return res.status(202).json({
-        message: `The database does not have a comments with id: ${commentsId}.`
-      });
-    }
-  },
-  undoDeleteComment: async (req, res) => {
-    const commentsId = req.body.commentsId || undefined;
-
-    if (!commentsId) {
-      return res.status(400).json({ message: "Failed: comments ID request." });
-    }
-
-    const burnedPostComments = await PostComments.updateOne({
-      id: commentsId
-    }).set({
-      deleted: false
-    });
-
-    if (burnedPostComments) {
-      await Notifications.updateOne({
-        typeNotification: NotificationTypes.NEW_COMMENT,
-        commentsId: commentsId
-      }).set({
-        deleted: false
-      });
-
-      return res
-        .status(200)
-        .json({ message: "Undo delete this comment successfully" });
     } else {
       return res.status(202).json({
         message: `The database does not have a comments with id: ${commentsId}.`
