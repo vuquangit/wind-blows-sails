@@ -1,88 +1,90 @@
 module.exports = {
-  addUserBlocked: async (req, res) => {
+  addBlock: async (req, res) => {
+    const viewerId = req.body.viewerId || undefined;
     const ownerId = req.body.ownerId || undefined;
-    const userIdBlocked = req.body.userIdBlocked || undefined;
+
+    if (!viewerId)
+      return res
+        .status(400)
+        .json({ message: "Add blocked failed: viewer ID is request." });
 
     if (!ownerId)
       return res
         .status(400)
-        .json({ message: "Add blocked failed. Owner ID is request." });
+        .json({ message: "Add blocked failed. User ID block is request" });
 
-    if (!userIdBlocked)
+    const viewerFound = await User.findOne({
+      id: viewerId
+    }).catch(err => {
+      res.serverError(err);
+    });
+
+    if (viewerFound === undefined)
       return res
         .status(400)
-        .json({ message: "Add blocked failed. User ID blocked is request" });
+        .json({ message: "Add blocked failed. viewer ID not found." });
 
-    const userValid = await User.findOne({
+    const userBlockFound = await User.findOne({
       id: ownerId
     }).catch(err => {
       res.serverError(err);
     });
 
-    if (userValid === undefined)
-      return res
-        .status(400)
-        .json({ message: "Add blocked failed. Owner ID not found." });
+    if (userBlockFound === undefined)
+      return res.status(400).json({
+        message: "Add blocked failed. User ID block is not found."
+      });
+
+    const userIdFound = await Blocked.findOne({
+      blockId: ownerId
+    }).catch(err => {
+      res.serverError(err);
+    });
+
+    if (userIdFound)
+      return res.status(400).json({
+        message: "Add blocked failed. User ID blocked adready added."
+      });
     else {
-      const userBlockValid = await User.findOne({
-        id: userIdBlocked
+      await Blocked.create({
+        ownerId: viewerId,
+        blockId: ownerId
       }).catch(err => {
         res.serverError(err);
       });
 
-      if (userBlockValid === undefined)
-        return res.status(400).json({
-          message: "Add blocked failed. User ID blocked is not found."
-        });
-
-      const userIdFound = await Blocked.findOne({
-        userIdBlocked: userIdBlocked
-      }).catch(err => {
-        res.serverError(err);
-      });
-
-      if (userIdFound !== undefined)
-        return res.status(400).json({
-          message: "Add blocked failed. User ID blocked adready added."
-        });
-      else {
-        await Blocked.create({
-          ownerId: ownerId,
-          userIdBlocked: userIdBlocked
-        }).catch(err => {
-          res.serverError(err);
-        });
-        return res.status(201).send({ message: "User is blocked." });
-      }
+      return res.status(201).send({ message: "User is blocked." });
     }
   },
-  unblock: async (req, res) => {
-    const ownerId = req.body.ownerId || undefined;
-    const userIdBlocked = req.body.userIdBlocked || undefined;
 
-    if (!ownerId)
+  unblock: async (req, res) => {
+    const viewerId = req.body.viewerId || undefined;
+    const ownerId = req.body.ownerId || undefined;
+
+    if (!viewerId)
       return res
         .status(400)
         .json({ message: "Unblock failed. Owner ID is request." });
 
-    if (!userIdBlocked)
+    if (!ownerId)
       return res
         .status(400)
         .json({ message: "Unblock failed. User ID unblock is request" });
 
-    const _unblock = await Blocked.destroyOne({
-      ownerId: ownerId,
-      userIdBlocked: userIdBlocked
+    const blockedBurned = await Blocked.destroyOne({
+      ownerId: viewerId,
+      blockId: ownerId
     });
-    if (_unblock) {
+    if (blockedBurned) {
       return res.status(200).send({ message: "Unblock successfully" });
     } else
       return res.status(400).send({
         message: "Unblock failed. The database does not have a blocked..."
       });
   },
-  blocked: async (req, res) => {
-    const id = req.body.id || undefined;
+
+  blocks: async (req, res) => {
+    const id = req.query.id || undefined;
     const limit = parseInt(req.query.limit || 20);
     const page = parseInt(req.query.page || 1);
 
@@ -98,43 +100,35 @@ module.exports = {
       where: { id: id },
       select: ["id"]
     }).populate("blockedId", {
-      select: ["id", "userIdBlocked"],
+      select: ["id", "blockId"],
       skip: (page - 1) * limit,
       limit: limit,
       sort: "createdAt ASC"
     });
 
-    if (!blockedList) {
-      return res.send({ message: "id not found" });
-    } else {
-      if (blockedList.blockedId.length > 0) {
-        const fetchUserInfo = async users => {
-          const data = users.map(async (item, idx) => {
-            return await User.findOne({
-              where: { id: item.userIdBlocked },
-              select: [
-                "id",
-                "fullName",
-                "isNew",
-                "isPrivate",
-                "profilePictureUrl",
-                "username",
-                "isVerified"
-              ]
-            });
-          });
+    if (!blockedList) return res.status(400).send({ message: "id not found" });
 
-          return Promise.all(data);
-        };
+    const blockedId = await Promise.all(
+      blockedList.blockedId.map(
+        async item =>
+          await User.findOne({
+            where: { id: item.blockId },
+            select: [
+              "id",
+              "fullName",
+              "isNew",
+              "isPrivate",
+              "profilePictureUrl",
+              "profilePicturePublicId",
+              "username",
+              "isVerified"
+            ]
+          })
+      )
+    );
 
-        fetchUserInfo(blockedList.blockedId).then(data => {
-          blockedList.blockedId = data;
-
-          return res.status(200).send(blockedList);
-        });
-      } else {
-        return res.status(200).send(blockedList);
-      }
-    }
+    return res
+      .status(200)
+      .send(_.omit({ ...blockedList, blocks: blockedId }, ["blockedId"]));
   }
 };

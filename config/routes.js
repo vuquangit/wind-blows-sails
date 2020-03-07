@@ -48,9 +48,9 @@ module.exports.routes = {
   "POST /api/v1/follow-requests/deny": "FollowController.denyFollow",
 
   // Blocked controllers
-  "POST /api/v1/add-user-blocked": "BlockedController.addUserBlocked",
-  "POST /api/v1/unblock": "BlockedController.unblock",
-  "POST /api/v1/blocked": "BlockedController.blocked",
+  "GET /api/v1/user/blocks": "BlockedController.blocks",
+  "POST /api/v1/user/blocks/block": "BlockedController.addBlock",
+  "POST /api/v1/user/blocks/unblock": "BlockedController.unblock",
 
   // Post controllers
   "GET /api/v1/posts": "PostController.posts",

@@ -2,105 +2,27 @@ var bcrypt = require("bcryptjs");
 
 module.exports = {
   attributes: {
-    bio: {
-      type: "string",
-      defaultsTo: ""
-    },
-
-    fullName: {
-      type: "string"
-    },
-
-    phoneNumber: {
-      type: "string",
-      allowNull: true
-    },
-
-    email: {
-      type: "string",
-      required: true,
-      unique: true
-    },
-
-    id: {
-      type: "number",
-      columnName: "_id"
-    },
-
-    isNew: {
-      type: "boolean",
-      defaultsTo: true
-    },
-
-    isPrivate: {
-      type: "boolean",
-      defaultsTo: false
-    },
-
-    profilePictureUrl: {
-      type: "string"
-    },
-
-    profilePicturePublicId: {
-      type: "string"
-    },
-
-    username: {
-      type: "string",
-      required: true,
-      unique: true
-    },
-
-    password: {
-      type: "string"
-      // required: true,
-    },
-
-    website: {
-      type: "string",
-      defaultsTo: ""
-    },
-
-    isVerified: {
-      type: "boolean",
-      defaultsTo: false
-    },
-
-    isUnpublished: {
-      type: "boolean",
-      defaultsTo: false
-    },
-
-    emailVerified: {
-      type: "boolean",
-      defaultsTo: false
-    },
-
-    gender: {
-      type: "string"
-    },
-
-    disabledAccount: {
-      type: "boolean",
-      defaultsTo: false
-    },
-
-    notificationToken: {
-      type: "string"
-    },
-
-    isAuthenticateLogin: {
-      type: "boolean",
-      defaultsTo: false
-    },
-
-    resetPasswordToken: {
-      type: "string"
-    },
-
-    resetPasswordExpires: {
-      type: "number"
-    },
+    id: { type: "number", columnName: "_id" },
+    bio: { type: "string", defaultsTo: "" },
+    fullName: { type: "string" },
+    phoneNumber: { type: "string", allowNull: true },
+    email: { type: "string", required: true, unique: true },
+    isNew: { type: "boolean", defaultsTo: true },
+    isPrivate: { type: "boolean", defaultsTo: false },
+    profilePictureUrl: { type: "string" },
+    profilePicturePublicId: { type: "string" },
+    username: { type: "string", required: true, unique: true },
+    password: { type: "string" },
+    website: { type: "string", defaultsTo: "" },
+    isVerified: { type: "boolean", defaultsTo: false },
+    isUnpublished: { type: "boolean", defaultsTo: false },
+    emailVerified: { type: "boolean", defaultsTo: false },
+    gender: { type: "string" },
+    disabledAccount: { type: "boolean", defaultsTo: false },
+    notificationToken: { type: "string" },
+    isAuthenticateLogin: { type: "boolean", defaultsTo: false },
+    resetPasswordToken: { type: "string" },
+    resetPasswordExpires: { type: "number" },
 
     // direct follow
     following: {
@@ -150,6 +72,7 @@ module.exports = {
       via: "ownerId"
     },
 
+    //  notifications model
     notifications: {
       collection: "notifications",
       via: "receiverId"

@@ -35,7 +35,7 @@ module.exports = {
       where: { id: ownerId },
       select: ["id"]
     })
-      .populate("blockedId", { where: { id: viewerId } })
+      .populate("blockedId", { where: { blockId: viewerId } })
       .populate("following", { where: { id: viewerId } })
       .populate("followingRequest", { where: { id: viewerId } });
 
@@ -43,9 +43,11 @@ module.exports = {
       where: { id: viewerId },
       select: ["id"]
     })
-      .populate("blockedId", { where: { id: ownerId } })
+      .populate("blockedId", { where: { blockId: ownerId } })
       .populate("following", { where: { id: ownerId } })
       .populate("followingRequest", { where: { id: ownerId } });
+
+    console.log(ownerFound, viewerFound);
 
     if (viewerFound === undefined || ownerFound === undefined)
       return relationshipDefault;
@@ -53,16 +55,17 @@ module.exports = {
     const relationship = {
       blockedByViewer: {
         state:
-          viewerFound.blockedId === undefined || viewerFound.blockedId.length
-            ? "BLOCK_STATUS_UNBLOCKED"
-            : "BLOCK_STATUS_BLOCKED",
+          viewerFound.blockedId !== undefined &&
+          viewerFound.blockedId.length > 0
+            ? "BLOCK_STATUS_BLOCKED"
+            : "BLOCK_STATUS_UNBLOCKED",
         stable: true
       },
       hasBlockedViewer: {
         state:
-          ownerFound.blockedId === undefined || ownerFound.blockedId.length
-            ? "BLOCK_STATUS_UNBLOCKED"
-            : "BLOCK_STATUS_BLOCKED",
+          ownerFound.blockedId !== undefined && ownerFound.blockedId.length > 0
+            ? "BLOCK_STATUS_BLOCKED"
+            : "BLOCK_STATUS_UNBLOCKED",
         stable: true
       },
       followedByViewer: {
