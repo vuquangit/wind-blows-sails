@@ -3,15 +3,17 @@ module.exports = {
     const viewerId = req.body.viewerId || undefined;
     const ownerId = req.body.ownerId || undefined;
 
-    if (!viewerId)
+    if (!viewerId) {
       return res
         .status(400)
         .json({ message: "Add blocked failed: viewer ID is request." });
+    }
 
-    if (!ownerId)
+    if (!ownerId) {
       return res
         .status(400)
         .json({ message: "Add blocked failed. User ID block is request" });
+    }
 
     const viewerFound = await User.findOne({
       id: viewerId
@@ -19,10 +21,11 @@ module.exports = {
       res.serverError(err);
     });
 
-    if (viewerFound === undefined)
+    if (viewerFound === undefined) {
       return res
         .status(400)
         .json({ message: "Add blocked failed. viewer ID not found." });
+    }
 
     const userBlockFound = await User.findOne({
       id: ownerId
@@ -30,10 +33,11 @@ module.exports = {
       res.serverError(err);
     });
 
-    if (userBlockFound === undefined)
+    if (userBlockFound === undefined) {
       return res.status(400).json({
         message: "Add blocked failed. User ID block is not found."
       });
+    }
 
     const userIdFound = await Blocked.findOne({
       blockId: ownerId
@@ -41,11 +45,11 @@ module.exports = {
       res.serverError(err);
     });
 
-    if (userIdFound)
+    if (userIdFound) {
       return res.status(400).json({
         message: "Add blocked failed. User ID blocked adready added."
       });
-    else {
+    } else {
       await Blocked.create({
         ownerId: viewerId,
         blockId: ownerId
@@ -61,26 +65,47 @@ module.exports = {
     const viewerId = req.body.viewerId || undefined;
     const ownerId = req.body.ownerId || undefined;
 
-    if (!viewerId)
+    if (!viewerId) {
       return res
         .status(400)
-        .json({ message: "Unblock failed. Owner ID is request." });
+        .json({ message: "Unblock failed: Owner ID is request." });
+    }
 
-    if (!ownerId)
+    if (!ownerId) {
       return res
         .status(400)
-        .json({ message: "Unblock failed. User ID unblock is request" });
+        .json({ message: "Unblock failed: User ID unblock is request" });
+    }
+
+    const viewerFound = await User.findOne({
+      where: { id: viewerId }
+    }).populate("blockedId", {
+      where: { blockId: ownerId }
+    });
+
+    if (!viewerFound) {
+      return res
+        .status(400)
+        .send({ message: "Unblock failed: User id not found." });
+    }
+
+    if (viewerFound.blockedId.length === 0) {
+      return res
+        .status(400)
+        .send({ message: "Unblock failed: block id not found." });
+    }
 
     const blockedBurned = await Blocked.destroyOne({
-      ownerId: viewerId,
-      blockId: ownerId
+      id: _.get(viewerFound, "blockedId[0].id", "")
     });
+
     if (blockedBurned) {
       return res.status(200).send({ message: "Unblock successfully" });
-    } else
+    } else {
       return res.status(400).send({
         message: "Unblock failed. The database does not have a blocked..."
       });
+    }
   },
 
   blocks: async (req, res) => {
@@ -94,7 +119,9 @@ module.exports = {
       });
     }
 
-    if (!id) return res.status(400).json({ message: "Owner ID is request." });
+    if (!id) {
+      return res.status(400).json({ message: "Owner ID is request." });
+    }
 
     const blockedList = await User.findOne({
       where: { id: id },
@@ -106,7 +133,9 @@ module.exports = {
       sort: "createdAt ASC"
     });
 
-    if (!blockedList) return res.status(400).send({ message: "id not found" });
+    if (!blockedList) {
+      return res.status(400).send({ message: "id not found" });
+    }
 
     const blockedId = await Promise.all(
       blockedList.blockedId.map(

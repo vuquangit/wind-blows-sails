@@ -5,7 +5,8 @@ module.exports = {
 
     // Add a reference to User model
     ownerId: {
-      model: "user"
+      collection: "user",
+      via: "blockedId"
     }
   }
 };

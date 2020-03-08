@@ -43,8 +43,11 @@ module.exports = {
       })
         .populate("savedId")
         .then(user => {
-          if (user) return user.savedId.length;
-          else return 0;
+          if (user) {
+            return user.savedId.length;
+          } else {
+            return 0;
+          }
         });
 
       // data response
@@ -82,7 +85,6 @@ module.exports = {
         .status(400)
         .json({ message: "Save post failed. User ID is not valid." });
     } else {
-      console.log(postId, "postId");
       const postValid = await Posts.findOne({
         id: postId
       });
