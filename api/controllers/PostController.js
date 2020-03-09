@@ -100,22 +100,44 @@ module.exports = {
       .populate("following", {
         select: ["id"]
       })
-      .populate("postId");
+      .populate("postId")
+      .populate("blockedId");
 
     if (userFound) {
       const userFollowing = userFound.following;
       if (userFollowing && userFollowing.length > 0) {
-        const getPosts = async () =>
-          userFollowing.reduce(async (accPromise, item) => {
-            const acc = await accPromise;
+        // skip by blocked and has blocked
+        const blockeds =
+          userFound && userFound.blockedId.length > 0
+            ? userFound.blockedId.map(item => _.get(item, "ownerId.id", ""))
+            : [];
 
+        const blockedFound = await Blocked.find({ blockId: userId }).populate(
+          "ownerId",
+          {
+            select: ["id"]
+          }
+        );
+        const hasBlocked =
+          blockedFound && blockedFound.length > 0
+            ? blockedFound.map(item => _.get(item, "ownerId[0].id", ""))
+            : [];
+
+        // add posts of user following
+        const data = await userFollowing.reduce(async (accPromise, item) => {
+          const acc = await accPromise;
+
+          if (
+            _.indexOf(blockeds, item.id) === -1 &&
+            _.indexOf(hasBlocked, item.id) === -1
+          ) {
             const postsUser = await User.findOne({
               id: item.id
             }).populate("postId", { select: ["createdAt"] });
 
-            const x = [...acc, ...postsUser.postId];
-            return x;
-          }, Promise.resolve([]));
+            return [...acc, ...postsUser.postId];
+          } else return acc;
+        }, Promise.resolve([]));
 
         const compareDesc = (a, b) => {
           const x = a.createdAt;
@@ -130,24 +152,24 @@ module.exports = {
           return comparison;
         };
 
-        const fetchPost = async arr =>
-          await Promise.all(
-            arr.map(async item => await PostService.post(item.id, userId))
-          );
+        const postsData = await [...data, ...userFound.postId];
+        const dataSorted = await postsData.sort(compareDesc);
+        const dataPagination = await dataSorted.slice(
+          (page - 1) * limit,
+          (page - 1) * limit + limit
+        );
 
-        getPosts().then(async data => {
-          const postsData = await [...data, ...userFound.postId];
-          const dataSorted = await postsData.sort(compareDesc);
-          const dataPagination = await dataSorted.slice(
-            (page - 1) * limit,
-            (page - 1) * limit + limit
-          );
+        const posts = await Promise.all(
+          dataPagination.map(
+            async item => await PostService.post(item.id, userId)
+          )
+        );
 
-          fetchPost(dataPagination).then(posts => {
-            return res
-              .status(200)
-              .send({ data: posts, totalItem: dataSorted.length });
-          });
+        return res.status(200).send({
+          data: posts,
+          dataTotal: posts.length,
+          userFound,
+          totalItem: dataSorted.length
         });
       } else {
         res.status(200).send([]);

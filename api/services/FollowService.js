@@ -47,8 +47,6 @@ module.exports = {
       .populate("following", { where: { id: ownerId } })
       .populate("followingRequest", { where: { id: ownerId } });
 
-    console.log(ownerFound, viewerFound);
-
     if (viewerFound === undefined || ownerFound === undefined)
       return relationshipDefault;
 

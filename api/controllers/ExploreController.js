@@ -37,46 +37,50 @@ module.exports = {
     if (userDB) {
       const userFollowed = await User.findOne({
         id: userId
-      }).populate("following", { select: ["id"] });
+      })
+        .populate("following", { select: ["id"] })
+        .populate("blockedId");
 
       if (userFollowed && userFollowed.following) {
+        // skip by blocked and user has following
+        const blockeds =
+          userFollowed.blockedId.length > 0
+            ? userFollowed.blockedId.map(item => _.get(item, "blockId", ""))
+            : [];
+
         const userSuggestion = await _.filter(
           userDB,
-          o => _.findIndex(userFollowed.following, f => f.id === o.id) < 0
+          item =>
+            _.findIndex(userFollowed.following, f => f.id === item.id) === -1 &&
+            _.indexOf(blockeds, item.id) === -1
         );
 
+        // panigation
         const userSuggestionPanigation = await _.slice(
           userSuggestion,
           (page - 1) * limit,
           (page - 1) * limit + limit
         );
 
-        const getRelationships = async () => {
-          const fetchRelationship = userSuggestionPanigation.map(
-            async (item, idx) => {
-              const relationship = await FollowService.relationship(
-                item.id,
-                userId
-              );
+        // modify reponse data
+        const data = await Promise.all(
+          userSuggestionPanigation.map(async item => {
+            const relationship = await FollowService.relationship(
+              item.id,
+              userId
+            );
 
-              return {
-                user: {
-                  ...item,
-                  suggestionDescription: "New to The Wind Blows"
-                },
-                relationship: relationship
-              };
-            }
-          );
+            return {
+              user: {
+                ...item,
+                suggestionDescription: "New to The Wind Blows"
+              },
+              relationship: relationship
+            };
+          })
+        );
 
-          return Promise.all(fetchRelationship);
-        };
-
-        getRelationships().then(data => {
-          return res
-            .status(200)
-            .send({ data, totalItem: userSuggestion.length });
-        });
+        return res.status(200).send({ data, totalItem: userSuggestion.length });
       } else {
         res.status(200).send({ data: userDB, totalItem: userDB.length });
       }
@@ -110,6 +114,18 @@ module.exports = {
     }
     //#endregion
 
+    const blocks = await Blocked.find({ blockId: viewerId }).populate(
+      "ownerId",
+      {
+        select: ["id"]
+      }
+    );
+
+    const hasBlockeds =
+      blocks && blocks.length > 0
+        ? blocks.map(item => _.get(item, "ownerId[0].id", ""))
+        : [];
+
     const searchFound = await User.find({
       where: {
         or: [
@@ -126,41 +142,65 @@ module.exports = {
         "profilePicturePublicId",
         "username",
         "isVerified"
-      ],
-      skip: (page - 1) * limit,
-      limit: limit
+      ]
     });
 
     if (searchFound) {
-      const getSubTitle = async () => {
-        const fetchRelationship = searchFound.map(async (item, idx) => {
-          const isFollowing = await User.findOne({
-            id: viewerId
-          }).populate("following", { where: { id: item.id } });
+      // skip blocked
 
-          if (isFollowing)
+      // const _searchFound = await searchFound.reduce(
+      //   async (accPromise, item) => {
+      //     const acc = await accPromise;
+      //     if (_.indexOf(hasBlockeds, item.id) === -1) {
+      //       return [...acc, item];
+      //     } else return acc;
+      //   },
+      //   Promise.resolve([])
+      // );
+
+      const _searchFound = await _.filter(
+        searchFound,
+        item => _.indexOf(hasBlockeds, item.id) === -1
+      );
+
+      // panigation
+      const searchPagination = await _searchFound.slice(
+        (page - 1) * limit,
+        (page - 1) * limit + limit
+      );
+
+      // add subtile
+      const data = await Promise.all(
+        searchPagination.map(async item => {
+          const viewerFound = await User.findOne({
+            id: viewerId
+          })
+            .populate("following", { where: { id: item.id } })
+            .populate("blockedId");
+
+          if (viewerFound) {
+            const blockeds =
+              viewerFound.blockedId.length > 0
+                ? viewerFound.blockedId.map(item => _.get(item, "blockId", ""))
+                : [];
+
             return {
               ...item,
               subTitle: `${item.fullName}${
-                isFollowing.following.length > 0 ? " • Following" : ""
+                viewerFound.following.length > 0
+                  ? _.indexOf(blockeds, item.id) === -1
+                    ? " • Following"
+                    : " • Blocked"
+                  : ""
               }`
             };
-          else return item;
-        });
+          } else {
+            return item;
+          }
+        })
+      );
 
-        return Promise.all(fetchRelationship);
-      };
-
-      getSubTitle().then(async data => {
-        const totalItems = await User.find({
-          or: [
-            { username: { contains: value } },
-            { fullName: { contains: value } }
-          ]
-        });
-
-        return res.status(200).send({ data, totalItems: totalItems.length });
-      });
+      return res.status(200).send({ data, totalItems: searchFound.length });
     } else {
       return res.status(200).send({ data: [], totalItems: 0 });
     }
