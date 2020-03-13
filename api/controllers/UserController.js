@@ -197,9 +197,9 @@ module.exports = {
         });
       }
 
-      const passValid = await bcrypt.compare(oldPassword, userFound.password);
+      const match = await bcrypt.compare(oldPassword, userFound.password);
 
-      if (!passValid) {
+      if (!match) {
         return res.status(400).send({
           message:
             "Sorry, your password was incorrect. Please double-check your password."
@@ -208,7 +208,7 @@ module.exports = {
     }
 
     // change password
-    await User.updateOne({
+    const userUpdate = await User.updateOne({
       id: userId
     }).set({
       password: newPassword,
@@ -217,9 +217,14 @@ module.exports = {
       resetPasswordExpires: Date.now() - 3600000
     });
 
-    return res.status(200).send({
-      message: "Your password changed"
-    });
+    if (userUpdate)
+      return res.status(200).send({
+        message: "Your password changed"
+      });
+    else
+      return res.status(400).send({
+        message: "Can't change your password"
+      });
   },
   changeProfilePicture: async (req, res) => {
     const userId = req.body.userId || undefined;
@@ -319,9 +324,6 @@ module.exports = {
         message: "email not in database"
       });
     } else {
-      // const token = jwt.sign({ user: user.id }, process.env.JWT_SECRET, {
-      //   expiresIn: 3600
-      // });
       const token = crypto.randomBytes(20).toString("hex");
 
       await User.updateOne({
@@ -346,13 +348,6 @@ module.exports = {
         from: `The Wind Blows <${mailServer}>`,
         to: email,
         subject: "Link To Reset Password",
-        // html: `<p style="font-size: 16px;">Please click to reset password</p>
-        // <br />
-        // ${localhost}${
-        //   _.endsWith(localhost, "/") ? "" : "/"
-        // }accounts/password/reset/${token}<br /><br />
-        // `
-
         html: `<div bgcolor="#F5F8FA" style="margin:0;padding:0"> 
         <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#F5F8FA" style="background-color:#f5f8fa;padding:0;margin:0;line-height:1px;font-size:1px"> 
          <tbody>
@@ -567,7 +562,7 @@ module.exports = {
     }
 
     const userFound = await User.findOne({
-      resetPasswordToken: resetPasswordToken,
+      resetPasswordToken,
       resetPasswordExpires: {
         ">=": Date.now()
       }
@@ -639,11 +634,41 @@ module.exports = {
   },
 
   deactivationUser: async (req, res) => {
-    const userId = req.params.userId || undefined;
+    const userId = req.body.userId || undefined;
+    const password = req.body.password || undefined;
 
-    if (_.isUndefined(req.param("userId"))) {
+    if (!userId) {
       return res.status(400).send({
-        message: "userId required."
+        message: "user Id required."
+      });
+    }
+
+    if (!password) {
+      return res.status(400).send({
+        message: "password required."
+      });
+    }
+
+    // check old password correct
+    userFound = await User.findOne({
+      id: userId
+    });
+
+    if (!userFound) {
+      return res.status(403).send({
+        message: "The database does not contain a user id"
+      });
+    }
+
+    console.log(userFound);
+
+    const match = await bcrypt.compare(password, userFound.password);
+    console.log(password, match);
+
+    if (!match) {
+      return res.status(400).send({
+        message:
+          "Sorry, your password was incorrect. Please double-check your password."
       });
     }
 
@@ -664,7 +689,7 @@ module.exports = {
     }
   },
   reactivatingUser: async (req, res) => {
-    const userId = req.params.userId || undefined;
+    const userId = req.body.userId || undefined;
 
     if (_.isUndefined(req.param("userId"))) {
       return res.status(400).send({

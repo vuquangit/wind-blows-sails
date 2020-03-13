@@ -83,18 +83,40 @@ module.exports = {
     return _.omit(this, ["password"]);
   },
   beforeCreate: function(attributes, next) {
-    bcrypt.genSalt(10, (err, salt) => {
-      if (err) {
-        return next(err);
-      }
-      bcrypt.hash(attributes.password, salt, (err, hash) => {
+    if (attributes.password) {
+      bcrypt.genSalt(10, (err, salt) => {
         if (err) {
           return next(err);
         }
-        attributes.password = hash;
-        next();
+        bcrypt.hash(attributes.password, salt, (err, hash) => {
+          if (err) {
+            return next(err);
+          }
+          attributes.password = hash;
+          next();
+        });
       });
-    });
+    } else {
+      next();
+    }
+  },
+  beforeUpdate: function(attributes, next) {
+    if (attributes.password) {
+      bcrypt.genSalt(10, (err, salt) => {
+        if (err) {
+          return next(err);
+        }
+        bcrypt.hash(attributes.password, salt, (err, hash) => {
+          if (err) {
+            return next(err);
+          }
+          attributes.password = hash;
+          next();
+        });
+      });
+    } else {
+      next();
+    }
   },
   validatePassword: function(password, user, cb) {
     bcrypt.compare(password, user.password, (err, match) => {
