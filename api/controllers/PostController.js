@@ -106,7 +106,7 @@ module.exports = {
     if (userFound) {
       const userFollowing = userFound.following;
       if (userFollowing && userFollowing.length > 0) {
-        // skip by blocked and has blocked
+        // skip by blocks, blocked
         const blockeds =
           userFound && userFound.blockedId.length > 0
             ? userFound.blockedId.map(item => _.get(item, "ownerId.id", ""))
@@ -132,10 +132,12 @@ module.exports = {
             _.indexOf(hasBlocked, item.id) === -1
           ) {
             const postsUser = await User.findOne({
-              id: item.id
+              id: item.id,
+              disabledAccount: false
             }).populate("postId", { select: ["createdAt"] });
 
-            return [...acc, ...postsUser.postId];
+            if (postsUser) return [...acc, ...postsUser.postId];
+            else return acc;
           } else return acc;
         }, Promise.resolve([]));
 

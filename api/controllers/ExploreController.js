@@ -19,7 +19,7 @@ module.exports = {
     //#endregion
 
     const userDB = await User.find({
-      where: { id: { "!=": userId } },
+      where: { id: { "!=": userId }, disabledAccount: false },
 
       select: [
         "id",
@@ -131,7 +131,8 @@ module.exports = {
         or: [
           { username: { contains: value } },
           { fullName: { contains: value } }
-        ]
+        ],
+        disabledAccount: false
       },
       select: [
         "id",

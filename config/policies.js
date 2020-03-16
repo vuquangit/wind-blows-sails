@@ -16,36 +16,35 @@ module.exports.policies = {
    *                                                                          *
    ***************************************************************************/
   // '*': true,
-
-  BlockedController: {
-    "*": "isAuthenticated"
-  },
-  FollowController: {
-    "*": "isAuthenticated"
-  },
-  NotificationsController: {
-    "*": "isAuthenticated"
-  },
-  PostController: {
-    "*": "isAuthenticated",
-    post: true,
-    comments: true
-  },
-  SavePostController: {
-    "*": "isAuthenticated"
-  },
-  UploadImageController: {
-    "*": "isAuthenticated"
-  },
-  UserController: {
-    "*": "isAuthenticated",
-    saveNotificationToken: true,
-    deleteNotificationToken: true,
-    forgotPassword: true,
-    resetPassword: true,
-    userIdInfo: true
-  },
-  ExploreController: {
-    "*": "isAuthenticated"
-  }
+  // BlockedController: {
+  //   "*": "isAuthenticated"
+  // },
+  // FollowController: {
+  //   "*": "isAuthenticated"
+  // },
+  // NotificationsController: {
+  //   "*": "isAuthenticated"
+  // },
+  // PostController: {
+  //   "*": "isAuthenticated",
+  //   post: true,
+  //   comments: true
+  // },
+  // SavePostController: {
+  //   "*": "isAuthenticated"
+  // },
+  // UploadImageController: {
+  //   "*": "isAuthenticated"
+  // },
+  // UserController: {
+  //   "*": "isAuthenticated",
+  //   saveNotificationToken: true,
+  //   deleteNotificationToken: true,
+  //   forgotPassword: true,
+  //   resetPassword: true,
+  //   userIdInfo: true
+  // },
+  // ExploreController: {
+  //   "*": "isAuthenticated"
+  // }
 };

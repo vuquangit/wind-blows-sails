@@ -82,14 +82,17 @@ module.exports = {
       }
     }
 
+    // check password
     const passValid = await bcrypt.compare(password, userFound.password);
-
     if (!passValid) {
       return res.status(400).send({
         message:
           "Sorry, your password was incorrect. Please double-check your password."
       });
     }
+
+    // reactivating
+    await User.updateOne({ id: userFound.id }).set({ disabledAccount: false });
 
     // count follow, media of user
     const counts = await UserService.counts(userFound.id);
@@ -240,6 +243,11 @@ module.exports = {
         }
       );
     } else {
+      // reactivating
+      await User.updateOne({ id: userFound.id }).set({
+        disabledAccount: false
+      });
+
       const counts = await UserService.counts(userFound.id);
       const tokens = await AuthService.generateTokens(userFound.id);
 

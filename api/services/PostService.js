@@ -4,6 +4,9 @@ module.exports = {
       where: { id: postId }
     })
       .populate("ownerId", {
+        where: {
+          disabledAccount: false
+        },
         select: [
           "id",
           "fullName",
@@ -25,7 +28,7 @@ module.exports = {
         where: { deleted: { "!=": true } }
       });
 
-    if (postFound === undefined) {
+    if (postFound === undefined || postFound.ownerId.length === 0) {
       return {};
     } else {
       // get realationship

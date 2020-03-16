@@ -14,7 +14,8 @@ module.exports = {
 
     const userFound = await User.findOne({
       where: {
-        id: userId
+        id: userId,
+        disabledAccount: false
       },
       select: [
         "id",
@@ -68,7 +69,8 @@ module.exports = {
 
     const userFound = await User.findOne({
       where: {
-        username: username
+        username: username,
+        disabledAccount: false
       },
       select: [
         "id",
@@ -84,18 +86,9 @@ module.exports = {
         "isVerified",
         "phoneNumber"
       ]
-    })
-      .catch(
-        {
-          name: "UsageError"
-        },
-        err => {
-          return res.badRequest(err);
-        }
-      )
-      .catch(err => {
-        return res.serverError(err);
-      });
+    }).catch(err => {
+      return res.serverError(err);
+    });
 
     if (userFound !== undefined) {
       // counts of user
@@ -651,7 +644,8 @@ module.exports = {
 
     // check old password correct
     userFound = await User.findOne({
-      id: userId
+      where: { id: userId },
+      select: ["email", "password"]
     });
 
     if (!userFound) {
@@ -660,12 +654,9 @@ module.exports = {
       });
     }
 
-    console.log(userFound);
+    const passValid = await bcrypt.compare(password, userFound.password);
 
-    const match = await bcrypt.compare(password, userFound.password);
-    console.log(password, match);
-
-    if (!match) {
+    if (!passValid) {
       return res.status(400).send({
         message:
           "Sorry, your password was incorrect. Please double-check your password."
