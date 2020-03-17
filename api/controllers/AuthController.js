@@ -53,7 +53,7 @@ module.exports = {
       "password",
       "isUnpublished",
       "phoneNumber",
-      "isAuthenticateLogin"
+      "isAuthorizationLogin"
     ];
 
     if (email !== undefined) {
@@ -108,7 +108,7 @@ module.exports = {
       emailVerified: false,
       isNew: true,
       isVerified: false,
-      isAuthenticateLogin: false
+      isAuthorizationLogin: false
     };
 
     if (_.isUndefined(req.param("email"))) {
@@ -165,7 +165,7 @@ module.exports = {
           media: 0
         };
 
-        const tokens = await AuthService.generateTokens(userFound.id);
+        const tokens = await AuthService.generateTokens(user.id);
 
         return res.status(201).send({ user: { ...user, counts }, tokens });
       }
@@ -199,7 +199,7 @@ module.exports = {
         "isVerified",
         "isUnpublished",
         "phoneNumber",
-        "isAuthenticateLogin"
+        "isAuthorizationLogin"
       ]
     }).catch(err => res.serverError(err));
 
@@ -216,7 +216,7 @@ module.exports = {
         website: "",
         isNew: true,
         isVerified: false,
-        isAuthenticateLogin: true // important
+        isAuthorizationLogin: true // important
       };
 
       // upload profile picture url to cloudinay
@@ -252,7 +252,7 @@ module.exports = {
       const tokens = await AuthService.generateTokens(userFound.id);
 
       return res.status(200).send({
-        user: { ...userFound, counts, isAuthenticateLogin: true },
+        user: { ...userFound, counts },
         tokens
       });
     }

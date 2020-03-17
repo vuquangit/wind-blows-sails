@@ -20,7 +20,7 @@ module.exports = {
     gender: { type: "string" },
     disabledAccount: { type: "boolean", defaultsTo: false },
     notificationToken: { type: "string" },
-    isAuthenticateLogin: { type: "boolean", defaultsTo: false },
+    isAuthorizationLogin: { type: "boolean", defaultsTo: false },
     resetPasswordToken: { type: "string" },
     resetPasswordExpires: { type: "number" },
 

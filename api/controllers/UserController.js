@@ -205,7 +205,7 @@ module.exports = {
       id: userId
     }).set({
       password: newPassword,
-      isAuthenticateLogin: false,
+      isAuthorizationLogin: false,
       resetPasswordToken: "",
       resetPasswordExpires: Date.now() - 3600000
     });
