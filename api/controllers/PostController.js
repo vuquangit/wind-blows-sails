@@ -104,11 +104,9 @@ module.exports = {
       .populate("blockedId");
 
     if (userFound) {
-      const userFollowing = userFound.following;
       if (
-        userFollowing &&
-        userFollowing.length > 0 &&
-        userFollowing.postId.length > 0
+        (userFound.following && userFound.following.length > 0) ||
+        (userFound.postId && userFound.postId.length > 0)
       ) {
         // skip by blocks, blocked
         const blockeds =
@@ -128,22 +126,25 @@ module.exports = {
             : [];
 
         // add posts of user following
-        const data = await userFollowing.reduce(async (accPromise, item) => {
-          const acc = await accPromise;
+        const data = await userFound.following.reduce(
+          async (accPromise, item) => {
+            const acc = await accPromise;
 
-          if (
-            _.indexOf(blockeds, item.id) === -1 &&
-            _.indexOf(hasBlocked, item.id) === -1
-          ) {
-            const postsUser = await User.findOne({
-              id: item.id,
-              disabledAccount: false
-            }).populate("postId", { select: ["createdAt"] });
+            if (
+              _.indexOf(blockeds, item.id) === -1 &&
+              _.indexOf(hasBlocked, item.id) === -1
+            ) {
+              const postsUser = await User.findOne({
+                id: item.id,
+                disabledAccount: false
+              }).populate("postId", { select: ["createdAt"] });
 
-            if (postsUser) return [...acc, ...postsUser.postId];
-            else return acc;
-          } else return acc;
-        }, Promise.resolve([]));
+              if (postsUser) return [...acc, ...postsUser.postId];
+              else return acc;
+            } else return acc;
+          },
+          Promise.resolve([])
+        );
 
         const compareDesc = (a, b) => {
           const x = a.createdAt;
