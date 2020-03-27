@@ -13,6 +13,7 @@ module.exports = {
           "isNew",
           "isPrivate",
           "profilePictureUrl",
+          "profilePicturePublicId",
           "username",
           "isUnpublished",
           "isVerified"

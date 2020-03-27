@@ -105,7 +105,11 @@ module.exports = {
 
     if (userFound) {
       const userFollowing = userFound.following;
-      if (userFollowing && userFollowing.length > 0) {
+      if (
+        userFollowing &&
+        userFollowing.length > 0 &&
+        userFollowing.postId.length > 0
+      ) {
         // skip by blocks, blocked
         const blockeds =
           userFound && userFound.blockedId.length > 0

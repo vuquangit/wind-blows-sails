@@ -11,7 +11,7 @@ module.exports = {
     isPrivate: { type: "boolean", defaultsTo: false },
     profilePictureUrl: { type: "string" },
     profilePicturePublicId: { type: "string" },
-    username: { type: "string", required: true, unique: true },
+    username: { type: "string", unique: true },
     password: { type: "string" },
     website: { type: "string", defaultsTo: "" },
     isVerified: { type: "boolean", defaultsTo: false },

@@ -25,10 +25,10 @@ module.exports = {
       },
       (error, result) => {
         if (error) {
-          res.status(400).json(err);
+          res.status(500).send(error);
         }
 
-        return res.status(201).json(result);
+        return res.status(201).send(result);
       }
     );
   },

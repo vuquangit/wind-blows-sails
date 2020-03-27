@@ -208,7 +208,6 @@ module.exports = {
       const userParams = {
         email: email,
         fullName: req.body.fullName || "",
-        username: req.body.username || undefined,
         emailVerified: req.body.emailVerified || false,
         phoneNumber: req.body.phoneNumber || "",
         profilePictureUrl: req.body.profilePictureUrl || "",
