@@ -25,7 +25,7 @@ module.exports = {
       },
       (error, result) => {
         if (error) {
-          res.status(500).send(error);
+          res.status(403).send(error);
         }
 
         return res.status(201).send(result);
@@ -49,7 +49,7 @@ module.exports = {
 
     Promise.all(promises)
       .then(results => res.json(results))
-      .catch(err => res.status(400).json(err));
+      .catch(err => res.status(403).json(err));
   },
   deleteImage: async (req, res) => {
     const publicId = req.body.publicId || undefined;

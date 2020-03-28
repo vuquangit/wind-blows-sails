@@ -20,7 +20,6 @@ module.exports = {
 
     const userDB = await User.find({
       where: { id: { "!=": userId }, disabledAccount: false },
-
       select: [
         "id",
         "fullName",
@@ -80,9 +79,11 @@ module.exports = {
           })
         );
 
-        return res.status(200).send({ data, totalItem: userSuggestion.length });
+        return res
+          .status(200)
+          .send({ data, totalItems: userSuggestion.length });
       } else {
-        res.status(200).send({ data: userDB, totalItem: userDB.length });
+        res.status(200).send({ data: userDB, totalItems: userDB.length });
       }
     } else {
       res.status(400).send({ message: "user not found" });
