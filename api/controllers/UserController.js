@@ -8,7 +8,7 @@ module.exports = {
 
     if (!userId) {
       return res.status(400).send({
-        message: "User id is request"
+        message: "User id is request."
       });
     }
 
