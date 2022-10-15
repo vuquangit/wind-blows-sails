@@ -1,4 +1,4 @@
-# THE WIND BLOWS - Server
+# THE WIND BLOWS - SERVER
 
 ## wind-blows-sails
 
