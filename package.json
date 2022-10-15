@@ -13,7 +13,7 @@
     "cloudinary": "^1.18.1",
     "crypto": "^1.0.1",
     "dotenv": "^8.2.0",
-    "firebase-admin": "^8.9.2",
+    "firebase-admin": "^11.1.0",
     "grunt": "1.0.4",
     "jsonwebtoken": "^8.5.1",
     "machinepack-emailaddresses": "^0.4.0",
