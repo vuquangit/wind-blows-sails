@@ -1,4 +1,6 @@
-# wind-blows-sails
+# THE WIND BLOWS - Server
+
+## wind-blows-sails
 
 a [Sails v1](https://sailsjs.com) application
 
